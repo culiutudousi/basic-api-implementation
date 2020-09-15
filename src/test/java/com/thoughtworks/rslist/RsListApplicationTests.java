@@ -144,10 +144,26 @@ class RsListApplicationTests {
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[0].eventName", is("1st event")))
                 .andExpect(jsonPath("$[0].keyWord", is("no tag")))
-                .andExpect(jsonPath("$[1].eventName", is("no tag")))
-                .andExpect(jsonPath("$[1].keyWord", is("education")))
+                .andExpect(jsonPath("$[1].eventName", is("2ed event")))
+                .andExpect(jsonPath("$[1].keyWord", is("no tag")))
                 .andExpect(jsonPath("$[2].eventName", is("3rd event updated")))
                 .andExpect(jsonPath("$[2].keyWord", is("industry")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DirtiesContext
+    public void should_delete_re_event() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(2);
+        mockMvc.perform(post("/rs/delete").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/rs/list"))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].eventName", is("1st event")))
+                .andExpect(jsonPath("$[0].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[1].eventName", is("3rd event")))
+                .andExpect(jsonPath("$[1].keyWord", is("no tag")))
                 .andExpect(status().isOk());
     }
 }

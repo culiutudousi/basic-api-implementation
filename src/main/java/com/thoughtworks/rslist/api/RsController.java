@@ -47,4 +47,9 @@ public class RsController {
       rsList.get(rsEventUpdate.getIndex() - 1).setKeyWord(rsEventUpdate.getKeyWord());
     }
   }
+
+  @PostMapping("/rs/delete")
+  public void deleteRsEvent(@RequestBody Integer index) {
+    rsList.remove(index - 1);
+  }
 }
