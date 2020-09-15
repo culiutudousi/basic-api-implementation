@@ -1,10 +1,7 @@
 package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,16 +19,21 @@ public class RsController {
     return rsEventList;
   }
 
-  @RequestMapping("/rs/{index}")
+  @GetMapping("/rs/{index}")
   public RsEvent getRsListAtIndex(@PathVariable int index) {
     return rsList.get(index - 1);
   }
 
-  @RequestMapping("/rs/list")
+  @GetMapping("/rs/list")
   public List<RsEvent> getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     if (start == null || end == null) {
       return rsList;
     }
     return rsList.subList(start - 1, end);
+  }
+
+  @PostMapping("/rs/event")
+  public void addRsEvent(@RequestBody RsEvent rsEvent) {
+    rsList.add(rsEvent);
   }
 }
