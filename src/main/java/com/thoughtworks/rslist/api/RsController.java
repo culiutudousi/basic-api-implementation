@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.domain.RsEventUpdate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -35,5 +36,15 @@ public class RsController {
   @PostMapping("/rs/event")
   public void addRsEvent(@RequestBody RsEvent rsEvent) {
     rsList.add(rsEvent);
+  }
+
+  @PostMapping("/rs/update")
+  public void updateRsEvent(@RequestBody RsEventUpdate rsEventUpdate) {
+    if (rsEventUpdate.getEventName() != null) {
+      rsList.get(rsEventUpdate.getIndex() - 1).setEventName(rsEventUpdate.getEventName());
+    }
+    if (rsEventUpdate.getKeyWord() != null) {
+      rsList.get(rsEventUpdate.getIndex() - 1).setKeyWord(rsEventUpdate.getKeyWord());
+    }
   }
 }
