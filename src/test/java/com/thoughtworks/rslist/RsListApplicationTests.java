@@ -1,5 +1,7 @@
 package com.thoughtworks.rslist;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.domain.RsEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +73,9 @@ class RsListApplicationTests {
 
     @Test
     public void should_add_re_event() throws Exception {
-        String jsonString = "{\"eventName\":\"pork rise in price\",\"keyWord\":\"economic\"}";
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/list"))
