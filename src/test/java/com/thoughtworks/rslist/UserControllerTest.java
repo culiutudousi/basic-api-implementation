@@ -33,7 +33,7 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(header().string("index", "1"))
+                .andExpect(header().string("index", "2"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/user"))

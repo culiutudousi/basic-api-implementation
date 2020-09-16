@@ -25,7 +25,7 @@ public class UserController {
     public ResponseEntity addUser(@RequestBody @Valid User user) {
         userList.add(user);
         return ResponseEntity.created(null)
-                .header("index", Integer.toString(userList.size() - 1))
+                .header("index", Integer.toString(userList.size()))
                 .build();
     }
 
