@@ -75,6 +75,27 @@ public class RsControllerTest {
     }
 
     @Test
+    public void should_throw_exception_when_get_rs_event_between_given_end_out_of_range() throws Exception {
+        mockMvc.perform(get("/rs/list?start=1&end=5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid request param")));
+    }
+
+    @Test
+    public void should_throw_exception_when_get_rs_event_between_given_start_out_of_range() throws Exception {
+        mockMvc.perform(get("/rs/list?start=-3&end=2"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid request param")));
+    }
+
+    @Test
+    public void should_throw_exception_when_get_rs_event_between_given_start_is_larger_than_end() throws Exception {
+        mockMvc.perform(get("/rs/list?start=2&end=1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid request param")));
+    }
+
+    @Test
     @DirtiesContext
     public void should_add_re_event_given_exist_user() throws Exception {
         User user = new User("czc", "male", 24, "czc@xxx.com", "12345678901");

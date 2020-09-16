@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.exception.RsEventNotValidException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
@@ -42,6 +43,9 @@ public class RsController {
   public ResponseEntity getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     if (start == null || end == null) {
       return ResponseEntity.ok(rsList);
+    }
+    if (start <= 0 || end > rsList.size() || start > end) {
+      throw new RsEventNotValidException("invalid request param");
     }
     return ResponseEntity.ok(rsList.subList(start - 1, end));
   }
