@@ -95,7 +95,7 @@ public class RsControllerTest {
                 .andExpect(jsonPath("$[3].eventName", is("pork rise in price")))
                 .andExpect(jsonPath("$[3].keyWord", is("economic")))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/user"))
+        mockMvc.perform(get("/users"))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("czc")));
     }
@@ -120,7 +120,7 @@ public class RsControllerTest {
                 .andExpect(jsonPath("$[3].eventName", is("pork rise in price")))
                 .andExpect(jsonPath("$[3].keyWord", is("economic")))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/user"))
+        mockMvc.perform(get("/users"))
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].name", is("czc")))
                 .andExpect(jsonPath("$[1].name", is("Alice")));
