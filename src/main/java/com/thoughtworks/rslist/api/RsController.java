@@ -35,6 +35,9 @@ public class RsController {
   @GetMapping("/rs/{index}")
   @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListAtIndex(@PathVariable int index) {
+    if (index <= 0 || index >= rsList.size()) {
+      throw new RsEventNotValidException("invalid index");
+    }
     return ResponseEntity.ok(rsList.get(index - 1));
   }
 

@@ -13,5 +13,4 @@ public class RsEventHandler {
         error.setError(e.getMessage());
         return ResponseEntity.badRequest().body(error);
     }
-
 }

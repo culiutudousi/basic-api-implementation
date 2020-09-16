@@ -96,6 +96,13 @@ public class RsControllerTest {
     }
 
     @Test
+    public void should_throw_exception_when_get_rs_event_given_index_out_of_range() throws Exception {
+        mockMvc.perform(get("/rs/5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid index")));
+    }
+
+    @Test
     @DirtiesContext
     public void should_add_re_event_given_exist_user() throws Exception {
         User user = new User("czc", "male", 24, "czc@xxx.com", "12345678901");
