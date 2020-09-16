@@ -5,12 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -81,5 +83,18 @@ public class RsController {
   public ResponseEntity deleteRsEvent(@PathVariable int index) {
     rsList.remove(index - 1);
     return ResponseEntity.ok(null);
+  }
+
+  @ExceptionHandler({RsEventNotValidException.class, MethodArgumentNotValidException.class})
+  public ResponseEntity rsExceptionHandler(Exception exception) {
+    String errorString;
+    if (exception instanceof MethodArgumentNotValidException) {
+      errorString = "invalid param";
+    } else {
+      errorString = exception.getMessage();
+    }
+    Error error = new Error();
+    error.setError(errorString);
+    return ResponseEntity.badRequest().body(error);
   }
 }

@@ -66,7 +66,8 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid user")));
     }
 
     @Test
@@ -76,7 +77,8 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid user")));
     }
 
     @Test
@@ -86,7 +88,8 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid user")));
     }
 
     @Test
@@ -96,6 +99,7 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid user")));
     }
 }
