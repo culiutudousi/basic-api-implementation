@@ -20,35 +20,38 @@ public class RsController {
   }
 
   @GetMapping("/rs/{index}")
-  public RsEvent getRsListAtIndex(@PathVariable int index) {
-    return rsList.get(index - 1);
+  public ResponseEntity getRsListAtIndex(@PathVariable int index) {
+    return ResponseEntity.ok(rsList.get(index - 1));
   }
 
   @GetMapping("/rs/list")
-  public List<RsEvent> getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
+  public ResponseEntity getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     if (start == null || end == null) {
-      return rsList;
+      return ResponseEntity.ok(rsList);
     }
-    return rsList.subList(start - 1, end);
+    return ResponseEntity.ok(rsList.subList(start - 1, end));
   }
 
   @PostMapping("/rs/event")
-  public void addRsEvent(@RequestBody RsEvent rsEvent) {
+  public ResponseEntity addRsEvent(@RequestBody RsEvent rsEvent) {
     rsList.add(rsEvent);
+    return ResponseEntity.created(null).build();
   }
 
   @PatchMapping("/rs/event/{index}")
-  public void updateRsEvent(@PathVariable int index, @RequestBody RsEvent rsEvent) {
+  public ResponseEntity updateRsEvent(@PathVariable int index, @RequestBody RsEvent rsEvent) {
     if (rsEvent.getEventName() != null) {
       rsList.get(index - 1).setEventName(rsEvent.getEventName());
     }
     if (rsEvent.getKeyWord() != null) {
       rsList.get(index - 1).setKeyWord(rsEvent.getKeyWord());
     }
+    return ResponseEntity.ok(null);
   }
 
   @DeleteMapping("/rs/event/{index}")
-  public void deleteRsEvent(@PathVariable int index) {
+  public ResponseEntity deleteRsEvent(@PathVariable int index) {
     rsList.remove(index - 1);
+    return ResponseEntity.ok(null);
   }
 }
