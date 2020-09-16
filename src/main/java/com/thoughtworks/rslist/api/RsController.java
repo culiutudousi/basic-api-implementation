@@ -9,6 +9,8 @@ import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
@@ -22,6 +24,7 @@ import java.util.List;
 @RestController
 public class RsController {
   private List<RsEvent> rsList = initRsList();
+  private Logger logger = LoggerFactory.getLogger(RsController.class);
 
   @Autowired
   UserController userController;
@@ -90,8 +93,10 @@ public class RsController {
     String errorString;
     if (exception instanceof MethodArgumentNotValidException) {
       errorString = "invalid param";
+      logger.error("An ERROR Message");
     } else {
       errorString = exception.getMessage();
+      logger.error(errorString);
     }
     Error error = new Error();
     error.setError(errorString);

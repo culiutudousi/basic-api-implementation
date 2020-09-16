@@ -3,6 +3,8 @@ package com.thoughtworks.rslist.api;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import java.util.List;
 @RestController
 public class UserController {
     private List<User> userList = initUserList();
+    private Logger logger = LoggerFactory.getLogger(RsController.class);
 
     private List<User> initUserList() {
         List<User> userList = new ArrayList<>();
@@ -45,6 +48,7 @@ public class UserController {
     public ResponseEntity rsExceptionHandler(Exception exception) {
         Error error = new Error();
         error.setError("invalid user");
+        logger.error("invalid user");
         return ResponseEntity.badRequest().body(error);
     }
 }
