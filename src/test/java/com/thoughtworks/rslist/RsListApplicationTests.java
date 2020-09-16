@@ -16,8 +16,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -97,10 +96,10 @@ class RsListApplicationTests {
     @Test
     @DirtiesContext
     public void should_update_re_event_given_only_event_name() throws Exception {
-        RsEventUpdate rsEventUpdate = new RsEventUpdate(1, "1st event updated", null);
+        RsEvent rsEvent = new RsEvent("1st event updated", null);
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventUpdate);
-        mockMvc.perform(post("/rs/update").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/1").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/list"))
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -116,10 +115,10 @@ class RsListApplicationTests {
     @Test
     @DirtiesContext
     public void should_update_re_event_given_only_key_word() throws Exception {
-        RsEventUpdate rsEventUpdate = new RsEventUpdate(2, null, "education");
+        RsEvent rsEvent = new RsEvent(null, "education");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventUpdate);
-        mockMvc.perform(post("/rs/update").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/2").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/list"))
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -135,10 +134,10 @@ class RsListApplicationTests {
     @Test
     @DirtiesContext
     public void should_update_re_event_given_both_event_name_and_key_word() throws Exception {
-        RsEventUpdate rsEventUpdate = new RsEventUpdate(3, "3rd event updated", "industry");
+        RsEvent rsEvent = new RsEvent("3rd event updated", "industry");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventUpdate);
-        mockMvc.perform(post("/rs/update").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/3").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/list"))
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -154,9 +153,7 @@ class RsListApplicationTests {
     @Test
     @DirtiesContext
     public void should_delete_re_event() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(2);
-        mockMvc.perform(post("/rs/delete").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/rs/event/2"))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/list"))
                 .andExpect(jsonPath("$", hasSize(2)))
