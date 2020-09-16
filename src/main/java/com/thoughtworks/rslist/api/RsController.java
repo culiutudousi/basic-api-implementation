@@ -1,8 +1,15 @@
 package com.thoughtworks.rslist.api;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -11,6 +18,9 @@ import java.util.List;
 @RestController
 public class RsController {
   private List<RsEvent> rsList = initRsList();
+
+  @Autowired
+  UserController userController;
 
   private List<RsEvent> initRsList() {
     List<RsEvent> rsEventList = new ArrayList<>();
@@ -22,11 +32,13 @@ public class RsController {
   }
 
   @GetMapping("/rs/{index}")
+  @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListAtIndex(@PathVariable int index) {
     return ResponseEntity.ok(rsList.get(index - 1));
   }
 
   @GetMapping("/rs/list")
+  @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     if (start == null || end == null) {
       return ResponseEntity.ok(rsList);
@@ -36,6 +48,10 @@ public class RsController {
 
   @PostMapping("/rs/event")
   public ResponseEntity addRsEvent(@RequestBody RsEvent rsEvent) {
+    if (!userController.doesUserExist(rsEvent.getUser())) {
+      userController.addUser(rsEvent.getUser());
+      System.out.println("Added new user");
+    }
     rsList.add(rsEvent);
     return ResponseEntity.created(null).build();
   }

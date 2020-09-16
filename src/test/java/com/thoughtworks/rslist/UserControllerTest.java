@@ -30,15 +30,20 @@ public class UserControllerTest {
     @Test
     @Order(1)
     public void should_register_user() throws Exception {
-        User user = new User("czc", "male", 24, "czc@xxx.com", "12345678901");
+        User user = new User("Alice", "female", 24, "Alice@xxx.com", "12222222222");
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/user"))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name", is("czc")));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("czc")))
+                .andExpect(jsonPath("$[1].name", is("Alice")))
+                .andExpect(jsonPath("$[1].gender", is("female")))
+                .andExpect(jsonPath("$[1].age", is(24)))
+                .andExpect(jsonPath("$[1].email", is("Alice@xxx.com")))
+                .andExpect(jsonPath("$[1].phone", is("12222222222")));
     }
 
     @Test
@@ -52,7 +57,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     public void should_validate_user_age_format() throws Exception {
         User user = new User("czc", "male", 3, "czc@xxx.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -62,7 +67,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(2)
+    @Order(4)
     public void should_validate_user_email_format() throws Exception {
         User user = new User("czc", "male", 24, "czc.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -72,7 +77,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(2)
+    @Order(5)
     public void should_validate_user_phone_format() throws Exception {
         User user = new User("czc", "male", 24, "czc@xxx.com", "123456789012222222");
         ObjectMapper objectMapper = new ObjectMapper();

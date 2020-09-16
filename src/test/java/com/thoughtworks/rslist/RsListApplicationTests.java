@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.api.UserController;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +37,10 @@ class RsListApplicationTests {
                 .andExpect(jsonPath("$[0]", not(hasKey("user"))))
                 .andExpect(jsonPath("$[1].eventName", is("2ed event")))
                 .andExpect(jsonPath("$[1].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[1]", not(hasKey("user"))))
                 .andExpect(jsonPath("$[2].eventName", is("3rd event")))
                 .andExpect(jsonPath("$[2].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[2]", not(hasKey("user"))))
                 .andExpect(status().isOk());
     }
 
@@ -46,6 +49,7 @@ class RsListApplicationTests {
         mockMvc.perform(get("/rs/1"))
                 .andExpect(jsonPath("$.eventName", is("1st event")))
                 .andExpect(jsonPath("$.keyWord", is("no tag")))
+                .andExpect(jsonPath("$", not(hasKey("user"))))
                 .andExpect(status().isOk());
     }
 
@@ -75,7 +79,7 @@ class RsListApplicationTests {
 
     @Test
     @DirtiesContext
-    public void should_add_re_event() throws Exception {
+    public void should_add_re_event_given_exist_user() throws Exception {
         User user = new User("czc", "male", 24, "czc@xxx.com", "12345678901");
         RsEvent rsEvent = new RsEvent("pork rise in price", "economic", user);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -93,6 +97,35 @@ class RsListApplicationTests {
                 .andExpect(jsonPath("$[3].eventName", is("pork rise in price")))
                 .andExpect(jsonPath("$[3].keyWord", is("economic")))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/user"))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].name", is("czc")));
+    }
+
+    @Test
+    @DirtiesContext
+    public void should_add_re_event_and_create_user_given_new_user() throws Exception {
+        User user = new User("Alice", "female", 24, "alice@xxx.com", "1222222222");
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+        mockMvc.perform(get("/rs/list"))
+                .andExpect(jsonPath("$", hasSize(4)))
+                .andExpect(jsonPath("$[0].eventName", is("1st event")))
+                .andExpect(jsonPath("$[0].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[1].eventName", is("2ed event")))
+                .andExpect(jsonPath("$[1].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[2].eventName", is("3rd event")))
+                .andExpect(jsonPath("$[2].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[3].eventName", is("pork rise in price")))
+                .andExpect(jsonPath("$[3].keyWord", is("economic")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/user"))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("czc")))
+                .andExpect(jsonPath("$[1].name", is("Alice")));
     }
 
     @Test
