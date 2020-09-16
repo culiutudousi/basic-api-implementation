@@ -53,7 +53,9 @@ public class RsController {
       System.out.println("Added new user");
     }
     rsList.add(rsEvent);
-    return ResponseEntity.created(null).build();
+    return ResponseEntity.created(null)
+            .header("index", Integer.toString(rsList.size() - 1))
+            .build();
   }
 
   @PatchMapping("/rs/event/{index}")

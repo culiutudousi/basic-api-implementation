@@ -24,7 +24,9 @@ public class UserController {
     @PostMapping("/user")
     public ResponseEntity addUser(@RequestBody @Valid User user) {
         userList.add(user);
-        return ResponseEntity.created(null).build();
+        return ResponseEntity.created(null)
+                .header("index", Integer.toString(userList.size() - 1))
+                .build();
     }
 
     @GetMapping("/user")

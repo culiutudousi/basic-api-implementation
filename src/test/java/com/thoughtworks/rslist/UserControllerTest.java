@@ -16,8 +16,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @SpringBootTest
@@ -34,6 +33,7 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("index", "1"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/user"))
