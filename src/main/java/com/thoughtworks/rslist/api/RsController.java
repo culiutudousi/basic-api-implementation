@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.domain.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,10 @@ public class RsController {
 
   private List<RsEvent> initRsList() {
     List<RsEvent> rsEventList = new ArrayList<>();
-    rsEventList.add(new RsEvent("1st event", "no tag"));
-    rsEventList.add(new RsEvent("2ed event", "no tag"));
-    rsEventList.add(new RsEvent("3rd event", "no tag"));
+    User user = new User("czc", "male", 24, "czc@xxx.com", "12345678901");
+    rsEventList.add(new RsEvent("1st event", "no tag", user));
+    rsEventList.add(new RsEvent("2ed event", "no tag", user));
+    rsEventList.add(new RsEvent("3rd event", "no tag", user));
     return rsEventList;
   }
 
