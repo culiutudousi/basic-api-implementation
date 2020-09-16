@@ -75,28 +75,28 @@ public class RsControllerTest {
     }
 
     @Test
-    public void should_throw_exception_when_get_rs_event_between_given_end_out_of_range() throws Exception {
+    public void should_return_error_message_when_get_rs_event_between_given_end_out_of_range() throws Exception {
         mockMvc.perform(get("/rs/list?start=1&end=5"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid request param")));
     }
 
     @Test
-    public void should_throw_exception_when_get_rs_event_between_given_start_out_of_range() throws Exception {
+    public void should_return_error_message_when_get_rs_event_between_given_start_out_of_range() throws Exception {
         mockMvc.perform(get("/rs/list?start=-3&end=2"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid request param")));
     }
 
     @Test
-    public void should_throw_exception_when_get_rs_event_between_given_start_is_larger_than_end() throws Exception {
+    public void should_treturn_error_message_when_get_rs_event_between_given_start_is_larger_than_end() throws Exception {
         mockMvc.perform(get("/rs/list?start=2&end=1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid request param")));
     }
 
     @Test
-    public void should_throw_exception_when_get_rs_event_given_index_out_of_range() throws Exception {
+    public void should_return_error_message_when_get_rs_event_given_index_out_of_range() throws Exception {
         mockMvc.perform(get("/rs/5"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid index")));
@@ -131,7 +131,7 @@ public class RsControllerTest {
     @Test
     @DirtiesContext
     public void should_add_re_event_and_create_user_given_new_user() throws Exception {
-        User user = new User("Alice", "female", 24, "alice@xxx.com", "1222222222");
+        User user = new User("Alice", "female", 24, "alice@xxx.com", "12222222222");
         RsEvent rsEvent = new RsEvent("pork rise in price", "economic", user);
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsEvent);
@@ -152,6 +152,18 @@ public class RsControllerTest {
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].name", is("czc")))
                 .andExpect(jsonPath("$[1].name", is("Alice")));
+    }
+
+    @Test
+    @DirtiesContext
+    public void should_return_error_message_when_add_rs_event_given_invalid_user() throws Exception {
+        User user = new User("Alice7777777", "female", 24, "alice@xxx.com", "1222222222");
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("invalid param")));
     }
 
     @Test
