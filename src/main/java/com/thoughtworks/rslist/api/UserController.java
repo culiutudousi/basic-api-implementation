@@ -3,8 +3,11 @@ package com.thoughtworks.rslist.api;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
+import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +16,15 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 @RestController
 public class UserController {
     private List<User> userList = initUserList();
     private Logger logger = LoggerFactory.getLogger(RsController.class);
+
+    @Autowired
+    private UserRepository userRepository;
 
     private List<User> initUserList() {
         List<User> userList = new ArrayList<>();
@@ -26,15 +34,22 @@ public class UserController {
 
     @PostMapping("/user")
     public ResponseEntity addUser(@RequestBody @Valid User user) {
-        userList.add(user);
+        UserPO userPO = UserPO.builder().name(user.getName()).age(user.getAge()).gender(user.getGender())
+                .email(user.getEmail()).phone(user.getPhone()).votes(10).build();
+        userRepository.save(userPO);
         return ResponseEntity.created(null)
-                .header("index", Integer.toString(userList.size()))
+                .header("index", Integer.toString(userPO.getId()))
                 .build();
     }
 
     @GetMapping("/users")
     public ResponseEntity getUserList() {
-        return ResponseEntity.ok(userList);
+        List<UserPO> userPOs = (List<UserPO>) userRepository.findAll();
+        List<User> users = userPOs.stream()
+                .map(userPO -> User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
+                        .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getVotes()).build())
+                .collect(toList());
+        return ResponseEntity.ok(users);
     }
 
     public Boolean doesUserExist(User user) {

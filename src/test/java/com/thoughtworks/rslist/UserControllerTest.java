@@ -2,18 +2,20 @@ package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.repository.UserRepository;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -26,9 +28,19 @@ public class UserControllerTest {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    UserRepository userRepository;
+
+
+    @BeforeEach
+    public void setUp() {
+        userRepository.deleteAll();
+    }
+
     @Test
-    @Order(1)
     public void should_get_user_list() throws Exception {
+        userRepository.save(UserPO.builder().name("czc").age(24).gender("male")
+                .email("czc@xxx.com").phone("12345678901").votes(10).build());
         mockMvc.perform(get("/users"))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("czc")))
@@ -41,22 +53,16 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(2)
     public void should_register_user() throws Exception {
         User user = new User("Alice", "female", 24, "Alice@xxx.com", "12222222222");
         ObjectMapper objectMapper = new ObjectMapper();
         String userString = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(header().string("index", "2"))
                 .andExpect(status().isCreated());
-        mockMvc.perform(get("/users"))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].name", is("czc")))
-                .andExpect(jsonPath("$[1].name", is("Alice")))
-                .andExpect(jsonPath("$[1].gender", is("female")))
-                .andExpect(jsonPath("$[1].age", is(24)))
-                .andExpect(jsonPath("$[1].email", is("Alice@xxx.com")))
-                .andExpect(jsonPath("$[1].phone", is("12222222222")));
+        List<UserPO> userPOs = (List<UserPO>) userRepository.findAll();
+        assertEquals(1, userPOs.size());
+        assertEquals("Alice", userPOs.get(0).getName());
+        assertEquals(24, userPOs.get(0).getAge());
     }
 
     @Test
