@@ -36,19 +36,20 @@ public class RsControllerTest {
     RsEventRepository rsEventRepository;
     @Autowired
     UserRepository userRepository;
-    UserPO existUserPO;
+    List<UserPO> existUserPOs = new ArrayList<>();
     List<RsEventPO> existRsEventPOs = new ArrayList<>();
 
     @BeforeEach
     public void setUp() {
         rsEventRepository.deleteAll();
         userRepository.deleteAll();
-        existUserPO = UserPO.builder().name("czc").age(24).gender("male")
-                .email("czc@xxx.com").phone("12345678901").votes(10).build();
-        userRepository.save(existUserPO);
-        existRsEventPOs.add(RsEventPO.builder().eventName("1st event").keyWord("no tag").userPO(existUserPO).build());
-        existRsEventPOs.add(RsEventPO.builder().eventName("2ed event").keyWord("no tag").userPO(existUserPO).build());
-        existRsEventPOs.add(RsEventPO.builder().eventName("3rd event").keyWord("no tag").userPO(existUserPO).build());
+
+        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").votes(10).build());
+        existUserPOs.forEach(userPO -> userRepository.save(userPO));
+
+        existRsEventPOs.add(RsEventPO.builder().eventName("1st event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
+        existRsEventPOs.add(RsEventPO.builder().eventName("2ed event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
+        existRsEventPOs.add(RsEventPO.builder().eventName("3rd event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
         existRsEventPOs.forEach(rsEventPO -> rsEventRepository.save(rsEventPO));
     }
 
@@ -96,7 +97,7 @@ public class RsControllerTest {
 
     @Test
     public void should_add_re_event_given_exist_user() throws Exception {
-        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", existUserPO.getId());
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", existUserPOs.get(0).getId());
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsEvent);
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
@@ -113,8 +114,8 @@ public class RsControllerTest {
 
     @Test
     @DirtiesContext
-    public void should_add_re_event_and_create_user_given_new_user() throws Exception {
-        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", 999);
+    public void should_return_bad_request_when_add_re_event_given_user_not_exist() throws Exception {
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", 99999);
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsEvent);
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
