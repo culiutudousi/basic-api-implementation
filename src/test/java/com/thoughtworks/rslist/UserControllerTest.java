@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -44,7 +43,7 @@ public class UserControllerTest {
         rsEventRepository.deleteAll();
         userRepository.deleteAll();
 
-        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").votes(10).build());
+        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build());
         existUserPOs.forEach(userPO -> userRepository.save(userPO));
 
         existRsEventPOs.add(RsEventPO.builder().eventName("1st event").keyWord("no tag").userPO(existUserPOs.get(0)).build());

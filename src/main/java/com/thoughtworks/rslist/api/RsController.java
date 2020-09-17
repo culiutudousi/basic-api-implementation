@@ -1,29 +1,26 @@
 package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.po.VotePO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
+import com.thoughtworks.rslist.repository.VoteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,6 +34,8 @@ public class RsController {
   RsEventRepository rsEventRepository;
   @Autowired
   UserRepository userRepository;
+  @Autowired
+  VoteRepository voteRepository;
 
   private List<RsEvent> initRsList() {
     List<RsEvent> rsEventList = new ArrayList<>();
@@ -97,9 +96,9 @@ public class RsController {
             .build();
   }
 
-  @PatchMapping("/rs/event/{id}")
-  public ResponseEntity updateRsEvent(@PathVariable int id, @RequestBody RsEvent rsEvent) {
-    Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(id);
+  @PatchMapping("/rs/event/{rsEventId}")
+  public ResponseEntity updateRsEvent(@PathVariable int rsEventId, @RequestBody RsEvent rsEvent) {
+    Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
     if (!rsEventPOResult.isPresent()) {
       return ResponseEntity.badRequest().build();
     }
@@ -120,6 +119,26 @@ public class RsController {
   @DeleteMapping("/rs/event/{index}")
   public ResponseEntity deleteRsEvent(@PathVariable int index) {
     rsList.remove(index - 1);
+    return ResponseEntity.ok(null);
+  }
+
+  @PostMapping("/rs/vote/{rsEventId}")
+  public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody Vote vote) {
+    Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
+    if (!rsEventPOResult.isPresent()) {
+      return ResponseEntity.badRequest().build();
+    }
+    RsEventPO rsEventPO = rsEventPOResult.get();
+    Optional<UserPO> userPOResult = userRepository.findById(vote.getUserId());
+    if (!userPOResult.isPresent()) {
+      return ResponseEntity.badRequest().build();
+    }
+    UserPO userPO = userPOResult.get();
+    if (vote.getVoteNum() > userPO.getLeftVoteNumber()) {
+      return ResponseEntity.badRequest().build();
+    }
+    voteRepository.save(VotePO.builder().userPO(userPO).rsEventPO(rsEventPO)
+            .voteNum(vote.getVoteNum()).voteTime(vote.getVoteTime()).build());
     return ResponseEntity.ok(null);
   }
 

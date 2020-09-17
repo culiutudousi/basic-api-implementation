@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "RsEvent")
@@ -22,4 +23,7 @@ public class RsEventPO {
     private String keyWord;
     @ManyToOne
     private UserPO userPO;
+
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "rsEventPO")
+    private List<VotePO> votePOs;
 }

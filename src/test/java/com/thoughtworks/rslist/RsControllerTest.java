@@ -2,18 +2,19 @@ package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
-import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.po.VotePO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
+import com.thoughtworks.rslist.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
@@ -40,6 +41,9 @@ public class RsControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    VoteRepository voteRepository;
+
     List<UserPO> existUserPOs = new ArrayList<>();
     List<RsEventPO> existRsEventPOs = new ArrayList<>();
 
@@ -47,8 +51,9 @@ public class RsControllerTest {
     public void setUp() {
         rsEventRepository.deleteAll();
         userRepository.deleteAll();
+        voteRepository.deleteAll();
 
-        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").votes(10).build());
+        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build());
         existUserPOs.forEach(userPO -> userRepository.save(userPO));
 
         existRsEventPOs.add(RsEventPO.builder().eventName("1st event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
@@ -141,7 +146,7 @@ public class RsControllerTest {
 
     @Test
     public void should_return_bad_request_when_update_rs_event_given_not_related_user() throws Exception {
-        UserPO newUserPO = UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").votes(10).build();
+        UserPO newUserPO = UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build();
         userRepository.save(newUserPO);
         int existRsEventId = existRsEventPOs.get(1).getId();
         RsEvent rsEvent = new RsEvent("pork rise in price", "economic", newUserPO.getId());
@@ -177,5 +182,35 @@ public class RsControllerTest {
         RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
         assertEquals("2ed event", rsEventPO.getEventName());
         assertEquals("economic", rsEventPO.getKeyWord());
+    }
+
+    @Test
+    public void should_vote_given_vote_number_less_than_user_has() throws Exception {
+        int rsEventId = existRsEventPOs.get(1).getId();
+        int userId = existRsEventPOs.get(1).getUserPO().getId();
+        Vote vote = new Vote(2, userId, "2020-09-18-00:18:27");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(vote);
+        mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
+        assertEquals(1, votesResult.size());
+        assertEquals(2, votesResult.get(0).getVoteNum());
+        assertEquals("2020-09-18-00:18:27", votesResult.get(0).getVoteTime());
+        assertEquals(userId, votesResult.get(0).getUserPO().getId());
+        assertEquals(rsEventId, votesResult.get(0).getRsEventPO().getId());
+    }
+
+    @Test
+    public void should_return_bad_request_when_vote_given_vote_number_larger_than_user_has() throws Exception {
+        int rsEventId = existRsEventPOs.get(1).getId();
+        int userId = existRsEventPOs.get(1).getUserPO().getId();
+        Vote vote = new Vote(12, userId, "2020-09-18-00:18:27");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(vote);
+        mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+        List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
+        assertEquals(0, votesResult.size());
     }
 }
