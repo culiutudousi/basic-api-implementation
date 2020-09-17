@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -51,6 +52,17 @@ public class UserController {
                         .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getVotes()).build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity getUser(@PathVariable int id) {
+        Optional<UserPO> userPOResult = userRepository.findById(id);
+        if (!userPOResult.isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+        UserPO userPO = userPOResult.get();
+        return ResponseEntity.ok(User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
+                .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getVotes()).build());
     }
 
     public Boolean doesUserExist(User user) {

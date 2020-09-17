@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -30,16 +31,18 @@ public class UserControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    List<UserPO> existUserPOs = new ArrayList<>();
 
     @BeforeEach
     public void setUp() {
         userRepository.deleteAll();
+        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male")
+                .email("czc@xxx.com").phone("12345678901").votes(10).build());
+        existUserPOs.forEach(existUserPO -> userRepository.save(existUserPO));
     }
 
     @Test
     public void should_get_user_list() throws Exception {
-        userRepository.save(UserPO.builder().name("czc").age(24).gender("male")
-                .email("czc@xxx.com").phone("12345678901").votes(10).build());
         mockMvc.perform(get("/users"))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("czc")))
@@ -59,9 +62,9 @@ public class UserControllerTest {
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
         List<UserPO> userPOs = (List<UserPO>) userRepository.findAll();
-        assertEquals(1, userPOs.size());
-        assertEquals("Alice", userPOs.get(0).getName());
-        assertEquals(24, userPOs.get(0).getAge());
+        assertEquals(2, userPOs.size());
+        assertEquals("Alice", userPOs.get(1).getName());
+        assertEquals(24, userPOs.get(1).getAge());
     }
 
     @Test
@@ -102,5 +105,21 @@ public class UserControllerTest {
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid user")));
+    }
+
+    @Test
+    public void should_get_user_information_given_exist_user_id() throws Exception {
+        mockMvc.perform(get("/user/" + existUserPOs.get(0).getId()))
+                .andExpect(jsonPath("$.name", is("czc")))
+                .andExpect(jsonPath("$.age", is(24)))
+                .andExpect(status().isOk());
+
+    }
+
+    @Test
+    public void should_return_bad_request_given_not_exist_user_id() throws Exception {
+        mockMvc.perform(get("/user/" + 99999))
+                .andExpect(status().isBadRequest());
+
     }
 }
