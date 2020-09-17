@@ -22,17 +22,10 @@ import static java.util.stream.Collectors.toList;
 
 @RestController
 public class UserController {
-    private List<User> userList = initUserList();
     private Logger logger = LoggerFactory.getLogger(RsController.class);
 
     @Autowired
     private UserRepository userRepository;
-
-    private List<User> initUserList() {
-        List<User> userList = new ArrayList<>();
-        userList.add(new User("czc", "male", 24, "czc@xxx.com", "12345678901"));
-        return userList;
-    }
 
     @PostMapping("/user")
     public ResponseEntity addUser(@RequestBody @Valid User user) {
@@ -65,11 +58,14 @@ public class UserController {
                 .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getVotes()).build());
     }
 
-    public Boolean doesUserExist(User user) {
-        long sameUserNameNumber = userList.stream()
-                .filter(existingUser -> existingUser.getName().equals(user.getName()))
-                .count();
-        return sameUserNameNumber >= 1;
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity deleteUser(@PathVariable int id) {
+        Optional<UserPO> userPOResult = userRepository.findById(id);
+        if (!userPOResult.isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+        userRepository.delete(userPOResult.get());
+        return ResponseEntity.ok(null);
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})

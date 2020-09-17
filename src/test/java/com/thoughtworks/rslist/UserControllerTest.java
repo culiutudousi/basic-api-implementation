@@ -17,8 +17,8 @@ import java.util.List;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -117,8 +117,23 @@ public class UserControllerTest {
     }
 
     @Test
-    public void should_return_bad_request_given_not_exist_user_id() throws Exception {
-        mockMvc.perform(get("/user/" + 99999))
+    public void should_return_bad_request_when_get_user_information_given_not_exist_user_id() throws Exception {
+        mockMvc.perform(get("/user/99999"))
+                .andExpect(status().isBadRequest());
+
+    }
+
+    @Test
+    public void should_delete_user_given_exist_user_id() throws Exception {
+        int userId = existUserPOs.get(0).getId();
+        mockMvc.perform(delete("/user/" + userId))
+                .andExpect(status().isOk());
+        assertFalse(userRepository.findById(userId).isPresent());
+    }
+
+    @Test
+    public void should_return_bad_request_when_delete_user_given_not_exist_user_id() throws Exception {
+        mockMvc.perform(delete("/user/99999"))
                 .andExpect(status().isBadRequest());
 
     }
