@@ -2,6 +2,7 @@ package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.domain.RsEventWithVoteNumber;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
@@ -46,6 +47,7 @@ public class RsControllerTest {
 
     List<UserPO> existUserPOs = new ArrayList<>();
     List<RsEventPO> existRsEventPOs = new ArrayList<>();
+    List<VotePO> existVotePOs = new ArrayList<>();
 
     @BeforeEach
     public void setUp() {
@@ -60,6 +62,11 @@ public class RsControllerTest {
         existRsEventPOs.add(RsEventPO.builder().eventName("2ed event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
         existRsEventPOs.add(RsEventPO.builder().eventName("3rd event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
         existRsEventPOs.forEach(rsEventPO -> rsEventRepository.save(rsEventPO));
+
+        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(0)).voteNum(1).voteTime("2020-09-18-00:11:11").build());
+        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(1)).voteNum(2).voteTime("2020-09-18-00:22:22").build());
+        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(2)).voteNum(3).voteTime("2020-09-18-00:33:33").build());
+        existVotePOs.forEach(votePO -> voteRepository.save(votePO));
     }
 
     @Test
@@ -68,9 +75,12 @@ public class RsControllerTest {
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[0].eventName", is("1st event")))
                 .andExpect(jsonPath("$[0].keyWord", is("no tag")))
+                .andExpect(jsonPath("$[0].voteNumber", is(1)))
                 .andExpect(jsonPath("$[0]", not(hasKey("userId"))))
                 .andExpect(jsonPath("$[1].eventName", is("2ed event")))
+                .andExpect(jsonPath("$[1].voteNumber", is(2)))
                 .andExpect(jsonPath("$[2].eventName", is("3rd event")))
+                .andExpect(jsonPath("$[2].voteNumber", is(3)))
                 .andExpect(status().isOk());
     }
 
@@ -79,6 +89,7 @@ public class RsControllerTest {
         mockMvc.perform(get("/rs/" + existRsEventPOs.get(1).getId()))
                 .andExpect(jsonPath("$.eventName", is("2ed event")))
                 .andExpect(jsonPath("$.keyWord", is("no tag")))
+                .andExpect(jsonPath("$.voteNumber", is(2)))
                 .andExpect(jsonPath("$", not(hasKey("userId"))))
                 .andExpect(status().isOk());
     }
@@ -194,11 +205,11 @@ public class RsControllerTest {
         mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
-        assertEquals(1, votesResult.size());
-        assertEquals(2, votesResult.get(0).getVoteNum());
-        assertEquals("2020-09-18-00:18:27", votesResult.get(0).getVoteTime());
-        assertEquals(userId, votesResult.get(0).getUserPO().getId());
-        assertEquals(rsEventId, votesResult.get(0).getRsEventPO().getId());
+        assertEquals(4, votesResult.size());
+        assertEquals(2, votesResult.get(3).getVoteNum());
+        assertEquals("2020-09-18-00:18:27", votesResult.get(3).getVoteTime());
+        assertEquals(userId, votesResult.get(3).getUserPO().getId());
+        assertEquals(rsEventId, votesResult.get(3).getRsEventPO().getId());
     }
 
     @Test
@@ -211,6 +222,6 @@ public class RsControllerTest {
         mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
         List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
-        assertEquals(0, votesResult.size());
+        assertEquals(3, votesResult.size());
     }
 }

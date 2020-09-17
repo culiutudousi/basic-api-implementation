@@ -3,6 +3,7 @@ package com.thoughtworks.rslist.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.domain.RsEventWithVoteNumber;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
@@ -46,6 +47,14 @@ public class RsController {
     return rsEventList;
   }
 
+  private RsEventWithVoteNumber getRsEventWithVoteNumberByRsEvent(RsEventPO rsEventPO) {
+    List<VotePO> votePOs = voteRepository.findVotePOByRsEventPO(rsEventPO);
+    int totalVoteNumber = votePOs.stream()
+            .map(VotePO::getVoteNum)
+            .reduce(0, Integer::sum);
+    return new RsEventWithVoteNumber(rsEventPO.getEventName(), rsEventPO.getKeyWord(), rsEventPO.getUserPO().getId(), totalVoteNumber);
+  }
+
   @GetMapping("/rs/{index}")
   @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListAtIndex(@PathVariable int index) {
@@ -57,15 +66,15 @@ public class RsController {
       throw new RsEventNotValidException("invalid index");
     }
     RsEventPO rsEventPO = rsEventPOResult.get();
-    return ResponseEntity.ok(new RsEvent(rsEventPO.getEventName(), rsEventPO.getKeyWord(), rsEventPO.getUserPO().getId()));
+    return ResponseEntity.ok(getRsEventWithVoteNumberByRsEvent(rsEventPO));
   }
 
   @GetMapping("/rs/list")
   @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     List<RsEventPO> rsEventPOs = (List<RsEventPO>) rsEventRepository.findAll();
-    List<RsEvent> rsEvents = rsEventPOs.stream()
-            .map(rsEventPO -> new RsEvent(rsEventPO.getEventName(), rsEventPO.getKeyWord(), rsEventPO.getUserPO().getId()))
+    List<RsEventWithVoteNumber> rsEvents = rsEventPOs.stream()
+            .map(this::getRsEventWithVoteNumberByRsEvent)
             .collect(Collectors.toList());
     if (start == null || end == null) {
       return ResponseEntity.ok(rsEvents);
