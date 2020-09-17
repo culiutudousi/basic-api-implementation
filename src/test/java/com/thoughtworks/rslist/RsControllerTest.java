@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -99,7 +100,7 @@ public class RsControllerTest {
     }
 
     @Test
-    public void should_add_re_event_given_exist_user() throws Exception {
+    public void should_add_rs_event_given_exist_user() throws Exception {
         RsEvent rsEvent = new RsEvent("pork rise in price", "economic", existUserPOs.get(0).getId());
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsEvent);
@@ -122,5 +123,59 @@ public class RsControllerTest {
         String jsonString = objectMapper.writeValueAsString(rsEvent);
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void should_update_rs_event_given_related_user() throws Exception {
+        int rsEventId = existRsEventPOs.get(1).getId();
+        int userId = existRsEventPOs.get(1).getUserPO().getId();
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", userId);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
+        assertEquals("pork rise in price", rsEventPO.getEventName());
+        assertEquals("economic", rsEventPO.getKeyWord());
+    }
+
+    @Test
+    public void should_return_bad_request_when_update_rs_event_given_not_related_user() throws Exception {
+        UserPO newUserPO = UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").votes(10).build();
+        userRepository.save(newUserPO);
+        int existRsEventId = existRsEventPOs.get(1).getId();
+        RsEvent rsEvent = new RsEvent("pork rise in price", "economic", newUserPO.getId());
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/" + existRsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void should_only_update_event_name_rs_event_when_update_rs_event_given_keyword_of_null() throws Exception {
+        int rsEventId = existRsEventPOs.get(1).getId();
+        int userId = existRsEventPOs.get(1).getUserPO().getId();
+        RsEvent rsEvent = new RsEvent("pork rise in price", null, userId);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
+        assertEquals("pork rise in price", rsEventPO.getEventName());
+        assertEquals("no tag", rsEventPO.getKeyWord());
+    }
+
+    @Test
+    public void should_only_update_keyword_rs_event_when_update_rs_event_given_event_name_of_null() throws Exception {
+        int rsEventId = existRsEventPOs.get(1).getId();
+        int userId = existRsEventPOs.get(1).getUserPO().getId();
+        RsEvent rsEvent = new RsEvent(null, "economic", userId);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        mockMvc.perform(patch("/rs/event/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
+        assertEquals("2ed event", rsEventPO.getEventName());
+        assertEquals("economic", rsEventPO.getKeyWord());
     }
 }

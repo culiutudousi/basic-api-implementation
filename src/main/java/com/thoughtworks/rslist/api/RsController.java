@@ -97,14 +97,23 @@ public class RsController {
             .build();
   }
 
-  @PatchMapping("/rs/event/{index}")
-  public ResponseEntity updateRsEvent(@PathVariable int index, @RequestBody RsEvent rsEvent) {
+  @PatchMapping("/rs/event/{id}")
+  public ResponseEntity updateRsEvent(@PathVariable int id, @RequestBody RsEvent rsEvent) {
+    Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(id);
+    if (!rsEventPOResult.isPresent()) {
+      return ResponseEntity.badRequest().build();
+    }
+    RsEventPO rsEventPO = rsEventPOResult.get();
+    if (rsEvent.getUserId() != rsEventPO.getUserPO().getId()) {
+      return ResponseEntity.badRequest().build();
+    }
     if (rsEvent.getEventName() != null) {
-      rsList.get(index - 1).setEventName(rsEvent.getEventName());
+      rsEventPO.setEventName(rsEvent.getEventName());
     }
     if (rsEvent.getKeyWord() != null) {
-      rsList.get(index - 1).setKeyWord(rsEvent.getKeyWord());
+      rsEventPO.setKeyWord(rsEvent.getKeyWord());
     }
+    rsEventRepository.save(rsEventPO);
     return ResponseEntity.ok(null);
   }
 

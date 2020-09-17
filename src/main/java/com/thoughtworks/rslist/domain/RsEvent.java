@@ -14,7 +14,6 @@ public class RsEvent {
     private String eventName;
     @JsonView(PropertyFilter.ReEventShowFilter.class)
     private String keyWord;
-    @Valid
     private int userId;
 
     public RsEvent() {
