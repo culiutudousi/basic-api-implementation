@@ -32,10 +32,13 @@ public class RsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
     @Autowired
     RsEventRepository rsEventRepository;
+
     @Autowired
     UserRepository userRepository;
+
     List<UserPO> existUserPOs = new ArrayList<>();
     List<RsEventPO> existRsEventPOs = new ArrayList<>();
 
@@ -90,7 +93,7 @@ public class RsControllerTest {
 
     @Test
     public void should_return_error_message_when_get_rs_event_given_index_out_of_range() throws Exception {
-        mockMvc.perform(get("/rs/999"))
+        mockMvc.perform(get("/rs/99999"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid index")));
     }
@@ -113,7 +116,6 @@ public class RsControllerTest {
     }
 
     @Test
-    @DirtiesContext
     public void should_return_bad_request_when_add_re_event_given_user_not_exist() throws Exception {
         RsEvent rsEvent = new RsEvent("pork rise in price", "economic", 99999);
         ObjectMapper objectMapper = new ObjectMapper();

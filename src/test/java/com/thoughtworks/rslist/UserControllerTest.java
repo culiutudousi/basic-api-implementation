@@ -2,7 +2,9 @@ package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -30,15 +33,24 @@ public class UserControllerTest {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    RsEventRepository rsEventRepository;
 
     List<UserPO> existUserPOs = new ArrayList<>();
+    List<RsEventPO> existRsEventPOs = new ArrayList<>();
 
     @BeforeEach
     public void setUp() {
+        rsEventRepository.deleteAll();
         userRepository.deleteAll();
-        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male")
-                .email("czc@xxx.com").phone("12345678901").votes(10).build());
-        existUserPOs.forEach(existUserPO -> userRepository.save(existUserPO));
+
+        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").votes(10).build());
+        existUserPOs.forEach(userPO -> userRepository.save(userPO));
+
+        existRsEventPOs.add(RsEventPO.builder().eventName("1st event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
+        existRsEventPOs.add(RsEventPO.builder().eventName("2ed event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
+        existRsEventPOs.add(RsEventPO.builder().eventName("3rd event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
+        existRsEventPOs.forEach(rsEventPO -> rsEventRepository.save(rsEventPO));
     }
 
     @Test
@@ -124,11 +136,12 @@ public class UserControllerTest {
     }
 
     @Test
-    public void should_delete_user_given_exist_user_id() throws Exception {
+    public void should_delete_user_with_related_rs_event_given_exist_user_id() throws Exception {
         int userId = existUserPOs.get(0).getId();
         mockMvc.perform(delete("/user/" + userId))
                 .andExpect(status().isOk());
         assertFalse(userRepository.findById(userId).isPresent());
+        assertEquals(0, ((List<RsEventPO>) rsEventRepository.findAll()).size());
     }
 
     @Test
