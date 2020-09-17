@@ -7,9 +7,10 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
+import java.util.List;
 
 @Entity
-@Table(name = "user")
+@Table(name = "User")
 @Data
 @Builder
 @AllArgsConstructor
@@ -25,4 +26,6 @@ public class UserPO {
     private String email;
     private String phone;
     private int votes;
+    @OneToMany(cascade = CascadeType.REMOVE)
+    private List<RsEventPO> rsEventPOs;
 }

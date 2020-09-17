@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -48,7 +49,7 @@ public class UserController {
         List<User> users = userPOs.stream()
                 .map(userPO -> User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
                         .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getVotes()).build())
-                .collect(toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
 
