@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 @RestController
 public class RsController {
-  private List<RsEvent> rsList = initRsList();
   private Logger logger = LoggerFactory.getLogger(RsController.class);
 
   @Autowired
@@ -125,9 +124,13 @@ public class RsController {
     return ResponseEntity.ok(null);
   }
 
-  @DeleteMapping("/rs/event/{index}")
-  public ResponseEntity deleteRsEvent(@PathVariable int index) {
-    rsList.remove(index - 1);
+  @DeleteMapping("/rs/event/{rsEventId}")
+  public ResponseEntity deleteRsEvent(@PathVariable int rsEventId) {
+    Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
+    if (!rsEventPOResult.isPresent()) {
+      return ResponseEntity.badRequest().build();
+    }
+    rsEventRepository.delete(rsEventPOResult.get());
     return ResponseEntity.ok(null);
   }
 

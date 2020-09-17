@@ -122,14 +122,13 @@ public class RsControllerTest {
         String jsonString = objectMapper.writeValueAsString(rsEvent);
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
-        mockMvc.perform(get("/rs/list"))
-                .andExpect(jsonPath("$", hasSize(4)))
-                .andExpect(jsonPath("$[0].eventName", is("1st event")))
-                .andExpect(jsonPath("$[1].eventName", is("2ed event")))
-                .andExpect(jsonPath("$[2].eventName", is("3rd event")))
-                .andExpect(jsonPath("$[3].eventName", is("pork rise in price")))
-                .andExpect(jsonPath("$[3].keyWord", is("economic")))
-                .andExpect(status().isOk());
+        List<RsEventPO> rsEventPOResults = (List<RsEventPO>) rsEventRepository.findAll();
+        assertEquals(4, rsEventPOResults.size());
+        assertEquals("1st event", rsEventPOResults.get(0).getEventName());
+        assertEquals("2ed event", rsEventPOResults.get(1).getEventName());
+        assertEquals("3rd event", rsEventPOResults.get(2).getEventName());
+        assertEquals("pork rise in price", rsEventPOResults.get(3).getEventName());
+        assertEquals("economic", rsEventPOResults.get(3).getKeyWord());
     }
 
     @Test
@@ -223,5 +222,16 @@ public class RsControllerTest {
                 .andExpect(status().isBadRequest());
         List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
         assertEquals(3, votesResult.size());
+    }
+
+    @Test
+    public void should_delete_rs_event() throws Exception {
+        int rsEventId = existRsEventPOs.get(1).getId();
+        mockMvc.perform(delete("/rs/event/" + rsEventId))
+                .andExpect(status().isOk());
+        List<RsEventPO> rsEventPOResults = (List<RsEventPO>) rsEventRepository.findAll();
+        assertEquals(2, rsEventPOResults.size());
+        assertEquals("1st event", rsEventPOResults.get(0).getEventName());
+        assertEquals("3rd event", rsEventPOResults.get(1).getEventName());
     }
 }
