@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserControllerTest {
     @Autowired
     MockMvc mockMvc;
@@ -66,7 +65,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(3)
     public void should_validate_user_name_format() throws Exception {
         User user = new User("czc123456789", "male", 24, "czc@xxx.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -77,7 +75,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(4)
     public void should_validate_user_age_format() throws Exception {
         User user = new User("czc", "male", 3, "czc@xxx.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -88,7 +85,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(5)
     public void should_validate_user_email_format() throws Exception {
         User user = new User("czc", "male", 24, "czc.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -99,7 +95,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(6)
     public void should_validate_user_phone_format() throws Exception {
         User user = new User("czc", "male", 24, "czc@xxx.com", "123456789012222222");
         ObjectMapper objectMapper = new ObjectMapper();
