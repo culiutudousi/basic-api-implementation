@@ -55,7 +55,8 @@ public class RsControllerTest {
         userRepository.deleteAll();
         voteRepository.deleteAll();
 
-        existUserPOs.add(UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build());
+        UserPO firstUserPO = UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build();
+        existUserPOs.add(firstUserPO);
         existUserPOs.forEach(userPO -> userRepository.save(userPO));
 
         existRsEventPOs.add(RsEventPO.builder().eventName("1st event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
@@ -67,6 +68,8 @@ public class RsControllerTest {
         existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(1)).voteNum(2).voteTime("2020-09-18-00:22:22").build());
         existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(2)).voteNum(3).voteTime("2020-09-18-00:33:33").build());
         existVotePOs.forEach(votePO -> voteRepository.save(votePO));
+        firstUserPO.setLeftVoteNumber(firstUserPO.getLeftVoteNumber() - 6);
+        userRepository.save(firstUserPO);
     }
 
     @Test
@@ -196,8 +199,9 @@ public class RsControllerTest {
 
     @Test
     public void should_vote_given_vote_number_less_than_user_has() throws Exception {
-        int rsEventId = existRsEventPOs.get(1).getId();
-        int userId = existRsEventPOs.get(1).getUserPO().getId();
+        RsEventPO rsEventPO = existRsEventPOs.get(1);
+        int rsEventId = rsEventPO.getId();
+        int userId = rsEventPO.getUserPO().getId();
         Vote vote = new Vote(2, userId, "2020-09-18-00:18:27");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(vote);
@@ -209,6 +213,7 @@ public class RsControllerTest {
         assertEquals("2020-09-18-00:18:27", votesResult.get(3).getVoteTime());
         assertEquals(userId, votesResult.get(3).getUserPO().getId());
         assertEquals(rsEventId, votesResult.get(3).getRsEventPO().getId());
+        assertEquals(2, userRepository.findById(userId).get().getLeftVoteNumber());
     }
 
     @Test

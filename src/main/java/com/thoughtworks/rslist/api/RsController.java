@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -135,6 +136,7 @@ public class RsController {
   }
 
   @PostMapping("/rs/vote/{rsEventId}")
+  @Transactional
   public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody Vote vote) {
     Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
     if (!rsEventPOResult.isPresent()) {
@@ -149,6 +151,8 @@ public class RsController {
     if (vote.getVoteNum() > userPO.getLeftVoteNumber()) {
       return ResponseEntity.badRequest().build();
     }
+    userPO.setLeftVoteNumber(userPO.getLeftVoteNumber() - vote.getVoteNum());
+    userRepository.save(userPO);
     voteRepository.save(VotePO.builder().userPO(userPO).rsEventPO(rsEventPO)
             .voteNum(vote.getVoteNum()).voteTime(vote.getVoteTime()).build());
     return ResponseEntity.ok(null);

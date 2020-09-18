@@ -25,7 +25,7 @@ public class User {
     private String email;
     @Pattern(regexp = "1\\d{10}")
     private String phone;
-    private Integer votes = 10;
+    private Integer votes;
 
     public User(String name, String gender, Integer age, String email, String phone) {
         this.name = name;
