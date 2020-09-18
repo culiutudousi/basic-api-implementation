@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.RsEventWithVoteNumber;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 
 @RestController
 public class RsController {
-  private Logger logger = LoggerFactory.getLogger(RsController.class);
+  Logger logger = RsListApplication.logger;
 
   @Autowired
   RsEventRepository rsEventRepository;

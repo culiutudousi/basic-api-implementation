@@ -1,5 +1,6 @@
 package com.thoughtworks.rslist.api;
 
+import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.po.UserPO;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
-    private Logger logger = LoggerFactory.getLogger(RsController.class);
+    Logger logger = RsListApplication.logger;
 
     @Autowired
     private UserRepository userRepository;
