@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.RsEvent;
-import com.thoughtworks.rslist.domain.RsEventWithVoteNumber;
+import com.thoughtworks.rslist.dto.RsEventDto;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
@@ -15,7 +15,6 @@ import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,12 +46,12 @@ public class RsController {
     return rsEventList;
   }
 
-  private RsEventWithVoteNumber getRsEventWithVoteNumberByRsEvent(RsEventPO rsEventPO) {
+  private RsEventDto getRsEventDTO(RsEventPO rsEventPO) {
     List<VotePO> votePOs = voteRepository.findVotePOByRsEventPO(rsEventPO);
     int totalVoteNumber = votePOs.stream()
             .map(VotePO::getVoteNum)
             .reduce(0, Integer::sum);
-    return new RsEventWithVoteNumber(rsEventPO.getEventName(), rsEventPO.getKeyWord(), rsEventPO.getUserPO().getId(), totalVoteNumber);
+    return new RsEventDto(rsEventPO.getEventName(), rsEventPO.getKeyWord(), rsEventPO.getUserPO().getId(), totalVoteNumber);
   }
 
   @GetMapping("/rs/{index}")
@@ -67,15 +65,15 @@ public class RsController {
       throw new RsEventNotValidException("invalid index");
     }
     RsEventPO rsEventPO = rsEventPOResult.get();
-    return ResponseEntity.ok(getRsEventWithVoteNumberByRsEvent(rsEventPO));
+    return ResponseEntity.ok(getRsEventDTO(rsEventPO));
   }
 
   @GetMapping("/rs/list")
   @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     List<RsEventPO> rsEventPOs = (List<RsEventPO>) rsEventRepository.findAll();
-    List<RsEventWithVoteNumber> rsEvents = rsEventPOs.stream()
-            .map(this::getRsEventWithVoteNumberByRsEvent)
+    List<RsEventDto> rsEvents = rsEventPOs.stream()
+            .map(this::getRsEventDTO)
             .collect(Collectors.toList());
     if (start == null || end == null) {
       return ResponseEntity.ok(rsEvents);
