@@ -7,6 +7,7 @@ import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.dto.RsEventDto;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.Vote;
+import com.thoughtworks.rslist.dto.VoteDTO;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,13 +39,12 @@ public class RsController {
   @Autowired
   VoteRepository voteRepository;
 
-  private List<RsEvent> initRsList() {
-    List<RsEvent> rsEventList = new ArrayList<>();
-    User user = new User("czc", "male", 24, "czc@xxx.com", "12345678901");
-    rsEventList.add(new RsEvent("1st event", "no tag", 1));
-    rsEventList.add(new RsEvent("2ed event", "no tag", 1));
-    rsEventList.add(new RsEvent("3rd event", "no tag", 1));
-    return rsEventList;
+  SimpleDateFormat dateFormatter = initDateFormatter();
+
+  private SimpleDateFormat initDateFormatter() {
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+    formatter.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+    return formatter;
   }
 
   private RsEventDto getRsEventDTO(RsEventPO rsEventPO) {
@@ -136,19 +137,26 @@ public class RsController {
 
   @PostMapping("/rs/vote/{rsEventId}")
   @Transactional
-  public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody Vote vote) throws ParseException {
+  public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody VoteDTO voteDTO) throws ParseException {
     Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
-    Optional<UserPO> userPOResult = userRepository.findById(vote.getUserId());
+    Optional<UserPO> userPOResult = userRepository.findById(voteDTO.getUserId());
     if (!rsEventPOResult.isPresent() || !userPOResult.isPresent() ||
-            vote.getVoteNum() > userPOResult.get().getLeftVoteNumber()) {
+            voteDTO.getVoteNum() > userPOResult.get().getLeftVoteNumber()) {
       return ResponseEntity.badRequest().build();
     }
     RsEventPO rsEventPO = rsEventPOResult.get();
     UserPO userPO = userPOResult.get();
-    userPO.setLeftVoteNumber(userPO.getLeftVoteNumber() - vote.getVoteNum());
+    userPO.setLeftVoteNumber(userPO.getLeftVoteNumber() - voteDTO.getVoteNum());
     userRepository.save(userPO);
-    voteRepository.save(VotePO.builder().userPO(userPO).rsEventPO(rsEventPO)
-            .voteNum(vote.getVoteNum()).voteTime(vote.getVoteTimeDateObject()).build());
+    Vote vote = Vote.builder()
+            .userId(voteDTO.getUserId())
+            .voteNum(voteDTO.getVoteNum())
+            .voteTime(dateFormatter.parse(voteDTO.getVoteTime())).build();
+    voteRepository.save(VotePO.builder()
+            .userPO(userPO)
+            .rsEventPO(rsEventPO)
+            .voteNum(vote.getVoteNum())
+            .voteTime(vote.getVoteTime()).build());
     return ResponseEntity.ok(null);
   }
 

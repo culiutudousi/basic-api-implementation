@@ -3,6 +3,7 @@ package com.thoughtworks.rslist;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.Vote;
+import com.thoughtworks.rslist.dto.VoteDTO;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.po.VotePO;
@@ -206,9 +207,9 @@ public class RsControllerTest {
         RsEventPO rsEventPO = existRsEventPOs.get(1);
         int rsEventId = rsEventPO.getId();
         int userId = rsEventPO.getUserPO().getId();
-        Vote vote = new Vote(2, userId, "2020-09-18 00:18:27");
+        VoteDTO voteDTO = new VoteDTO(2, userId, "2020-09-18 00:18:27");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(vote);
+        String jsonString = objectMapper.writeValueAsString(voteDTO);
         mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
@@ -224,9 +225,9 @@ public class RsControllerTest {
     public void should_return_bad_request_when_vote_given_vote_number_larger_than_user_has() throws Exception {
         int rsEventId = existRsEventPOs.get(1).getId();
         int userId = existRsEventPOs.get(1).getUserPO().getId();
-        Vote vote = new Vote(12, userId, "2020-09-18 00:18:27");
+        VoteDTO voteDTO = new VoteDTO(12, userId, "2020-09-18 00:18:27");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(vote);
+        String jsonString = objectMapper.writeValueAsString(voteDTO);
         mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
         List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();

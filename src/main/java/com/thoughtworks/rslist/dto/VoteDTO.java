@@ -1,4 +1,4 @@
-package com.thoughtworks.rslist.domain;
+package com.thoughtworks.rslist.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,8 +13,8 @@ import java.util.TimeZone;
 @Data
 @Builder
 @AllArgsConstructor
-public class Vote {
+public class VoteDTO {
     private int voteNum;
     private int userId;
-    private Date voteTime;
+    private String voteTime;
 }
