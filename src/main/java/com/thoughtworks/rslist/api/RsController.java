@@ -23,9 +23,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -138,24 +138,19 @@ public class RsController {
 
   @PostMapping("/rs/vote/{rsEventId}")
   @Transactional
-  public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody Vote vote) {
+  public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody Vote vote) throws ParseException {
     Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
-    if (!rsEventPOResult.isPresent()) {
+    Optional<UserPO> userPOResult = userRepository.findById(vote.getUserId());
+    if (!rsEventPOResult.isPresent() || !userPOResult.isPresent() ||
+            vote.getVoteNum() > userPOResult.get().getLeftVoteNumber()) {
       return ResponseEntity.badRequest().build();
     }
     RsEventPO rsEventPO = rsEventPOResult.get();
-    Optional<UserPO> userPOResult = userRepository.findById(vote.getUserId());
-    if (!userPOResult.isPresent()) {
-      return ResponseEntity.badRequest().build();
-    }
     UserPO userPO = userPOResult.get();
-    if (vote.getVoteNum() > userPO.getLeftVoteNumber()) {
-      return ResponseEntity.badRequest().build();
-    }
     userPO.setLeftVoteNumber(userPO.getLeftVoteNumber() - vote.getVoteNum());
     userRepository.save(userPO);
     voteRepository.save(VotePO.builder().userPO(userPO).rsEventPO(rsEventPO)
-            .voteNum(vote.getVoteNum()).voteTime(vote.getVoteTime()).build());
+            .voteNum(vote.getVoteNum()).voteTime(vote.getVoteTimeDateObject()).build());
     return ResponseEntity.ok(null);
   }
 

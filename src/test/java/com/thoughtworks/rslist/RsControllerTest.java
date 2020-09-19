@@ -18,8 +18,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
@@ -49,8 +50,10 @@ public class RsControllerTest {
     List<RsEventPO> existRsEventPOs = new ArrayList<>();
     List<VotePO> existVotePOs = new ArrayList<>();
 
+    SimpleDateFormat formatter;
+
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws ParseException {
         rsEventRepository.deleteAll();
         userRepository.deleteAll();
         voteRepository.deleteAll();
@@ -64,9 +67,11 @@ public class RsControllerTest {
         existRsEventPOs.add(RsEventPO.builder().eventName("3rd event").keyWord("no tag").userPO(existUserPOs.get(0)).build());
         existRsEventPOs.forEach(rsEventPO -> rsEventRepository.save(rsEventPO));
 
-        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(0)).voteNum(1).voteTime("2020-09-18-00:11:11").build());
-        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(1)).voteNum(2).voteTime("2020-09-18-00:22:22").build());
-        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(2)).voteNum(3).voteTime("2020-09-18-00:33:33").build());
+        formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(0)).voteNum(1).voteTime(formatter.parse("2020-09-18 00:11:11")).build());
+        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(1)).voteNum(2).voteTime(formatter.parse("2020-09-18 00:22:22")).build());
+        existVotePOs.add(VotePO.builder().userPO(existUserPOs.get(0)).rsEventPO(existRsEventPOs.get(2)).voteNum(3).voteTime(formatter.parse("2020-09-18 00:33:33")).build());
         existVotePOs.forEach(votePO -> voteRepository.save(votePO));
         firstUserPO.setLeftVoteNumber(firstUserPO.getLeftVoteNumber() - 6);
         userRepository.save(firstUserPO);
@@ -202,7 +207,7 @@ public class RsControllerTest {
         RsEventPO rsEventPO = existRsEventPOs.get(1);
         int rsEventId = rsEventPO.getId();
         int userId = rsEventPO.getUserPO().getId();
-        Vote vote = new Vote(2, userId, "2020-09-18-00:18:27");
+        Vote vote = new Vote(2, userId, "2020-09-18 00:18:27");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(vote);
         mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
@@ -210,7 +215,7 @@ public class RsControllerTest {
         List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
         assertEquals(4, votesResult.size());
         assertEquals(2, votesResult.get(3).getVoteNum());
-        assertEquals("2020-09-18-00:18:27", votesResult.get(3).getVoteTime());
+        assertEquals("2020-09-18 00:18:27", formatter.format(votesResult.get(3).getVoteTime()));
         assertEquals(userId, votesResult.get(3).getUserPO().getId());
         assertEquals(rsEventId, votesResult.get(3).getRsEventPO().getId());
         assertEquals(2, userRepository.findById(userId).get().getLeftVoteNumber());
@@ -220,7 +225,7 @@ public class RsControllerTest {
     public void should_return_bad_request_when_vote_given_vote_number_larger_than_user_has() throws Exception {
         int rsEventId = existRsEventPOs.get(1).getId();
         int userId = existRsEventPOs.get(1).getUserPO().getId();
-        Vote vote = new Vote(12, userId, "2020-09-18-00:18:27");
+        Vote vote = new Vote(12, userId, "2020-09-18 00:18:27");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(vote);
         mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))

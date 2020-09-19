@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Date;
 
 @Entity
 @Table(name = "Vote")
@@ -32,5 +33,5 @@ public class VotePO implements Serializable {
 
     int voteNum;
 
-    String voteTime;
+    Date voteTime;
 }
