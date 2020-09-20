@@ -1,5 +1,6 @@
 package com.thoughtworks.rslist.service;
 
+import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
 import com.thoughtworks.rslist.exception.VoteNotValidException;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -47,5 +49,12 @@ public class VoteService {
                 .rsEventPO(rsEventPO)
                 .voteNum(vote.getVoteNum())
                 .voteTime(vote.getVoteTime()).build());
+    }
+
+    public int getVoteNumberOf(RsEventPO rsEventPO) {
+        List<VotePO> votePOs = voteRepository.findVotePOByRsEventPO(rsEventPO);
+        return votePOs.stream()
+                .map(VotePO::getVoteNum)
+                .reduce(0, Integer::sum);
     }
 }

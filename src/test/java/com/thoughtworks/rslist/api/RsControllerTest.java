@@ -98,34 +98,18 @@ public class RsControllerTest {
     }
 
     @Test
-    public void should_return_error_message_when_get_rs_event_between_given_start_out_of_range() throws Exception {
-        mockMvc.perform(get("/rs/list?start=-3&end=2"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("invalid request param")));
-    }
-
-    @Test
-    public void should_return_error_message_when_get_rs_event_between_given_start_is_larger_than_end() throws Exception {
-        mockMvc.perform(get("/rs/list?start=2&end=1"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("invalid request param")));
-    }
-
-    @Test
     public void should_return_error_message_when_get_rs_event_given_index_out_of_range() throws Exception {
         mockMvc.perform(get("/rs/99999"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("invalid index")));
+                .andExpect(jsonPath("$.error", is("Invalid id: RsEvent does not exist")));
     }
 
     @Test
     public void should_add_rs_event_given_exist_user() throws Exception {
-        RsEventWithUserIdDTO rsEventWithUserIdDTO = new RsEventWithUserIdDTO(
-                "pork rise in price", "economic", existUserPOs.get(0).getId()
-        );
+        RsEventDTO rsEventDTO = new RsEventDTO("pork rise in price", "economic");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventWithUserIdDTO);
-        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEventDTO);
+        mockMvc.perform(post("/rs/event?userId=" + existUserPOs.get(0).getId()).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
         List<RsEventPO> rsEventPOResults = (List<RsEventPO>) rsEventRepository.findAll();
         assertEquals(4, rsEventPOResults.size());
@@ -138,12 +122,10 @@ public class RsControllerTest {
 
     @Test
     public void should_return_bad_request_when_add_re_event_given_user_not_exist() throws Exception {
-        RsEventWithUserIdDTO rsEventWithUserIdDTO = new RsEventWithUserIdDTO(
-                "pork rise in price", "economic", 99999
-        );
+        RsEventDTO rsEventDTO = new RsEventDTO("pork rise in price", "economic");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventWithUserIdDTO);
-        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEventDTO);
+        mockMvc.perform(post("/rs/event?userId=99999").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -151,10 +133,10 @@ public class RsControllerTest {
     public void should_update_rs_event_given_related_user() throws Exception {
         int rsEventId = existRsEventPOs.get(1).getId();
         int userId = existRsEventPOs.get(1).getUserPO().getId();
-        RsEventWithUserIdDTO rsEventWithUserIdDTO = new RsEventWithUserIdDTO("pork rise in price", "economic", userId);
+        RsEventDTO rsEventDTO = new RsEventDTO("pork rise in price", "economic");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventWithUserIdDTO);
-        mockMvc.perform(patch("/rs/event/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEventDTO);
+        mockMvc.perform(patch("/rs/event/" + rsEventId + "?userId=" + userId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
         assertEquals("pork rise in price", rsEventPO.getEventName());
@@ -166,10 +148,10 @@ public class RsControllerTest {
         UserPO newUserPO = UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build();
         userRepository.save(newUserPO);
         int existRsEventId = existRsEventPOs.get(1).getId();
-        RsEventWithUserIdDTO rsEventWithUserIdDTO = new RsEventWithUserIdDTO("pork rise in price", "economic", newUserPO.getId());
+        RsEventDTO rsEventDTO = new RsEventDTO("pork rise in price", "economic");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventWithUserIdDTO);
-        mockMvc.perform(patch("/rs/event/" + existRsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEventDTO);
+        mockMvc.perform(patch("/rs/event/" + existRsEventId + "?userId=" + newUserPO.getId()).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -177,10 +159,10 @@ public class RsControllerTest {
     public void should_only_update_event_name_rs_event_when_update_rs_event_given_keyword_of_null() throws Exception {
         int rsEventId = existRsEventPOs.get(1).getId();
         int userId = existRsEventPOs.get(1).getUserPO().getId();
-        RsEventWithUserIdDTO rsEventWithUserIdDTO = new RsEventWithUserIdDTO("pork rise in price", null, userId);
+        RsEventDTO rsEventDTO = new RsEventDTO("pork rise in price", null);
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEventWithUserIdDTO);
-        mockMvc.perform(patch("/rs/event/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(rsEventDTO);
+        mockMvc.perform(patch("/rs/event/" + rsEventId + "?userId=" + userId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
         assertEquals("pork rise in price", rsEventPO.getEventName());
@@ -191,10 +173,10 @@ public class RsControllerTest {
     public void should_only_update_keyword_rs_event_when_update_rs_event_given_event_name_of_null() throws Exception {
         int rsEventId = existRsEventPOs.get(1).getId();
         int userId = existRsEventPOs.get(1).getUserPO().getId();
-        RsEventWithUserIdDTO eventWithUserIdDTO = new RsEventWithUserIdDTO(null, "economic", userId);
+        RsEventDTO eventDTO = new RsEventDTO(null, "economic");
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(eventWithUserIdDTO);
-        mockMvc.perform(patch("/rs/event/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+        String jsonString = objectMapper.writeValueAsString(eventDTO);
+        mockMvc.perform(patch("/rs/event/" + rsEventId + "?userId=" + userId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
         assertEquals("2ed event", rsEventPO.getEventName());
