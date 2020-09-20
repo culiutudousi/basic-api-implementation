@@ -3,6 +3,7 @@ package com.thoughtworks.rslist.api;
 import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.Vote;
+import com.thoughtworks.rslist.dto.DateRangeDTO;
 import com.thoughtworks.rslist.dto.VoteDTO;
 import com.thoughtworks.rslist.exception.VoteNotValidException;
 import com.thoughtworks.rslist.po.RsEventPO;
@@ -23,10 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -44,6 +42,14 @@ public class VoteController {
         return formatter;
     }
 
+    private VoteDTO transformVoteToVoteDTO(Vote vote) {
+        return VoteDTO.builder()
+                .userId(vote.getUserId())
+                .voteNum(vote.getVoteNum())
+                .voteTime(dateFormatter.format(vote.getVoteTime()))
+                .build();
+    }
+
     @PostMapping("/vote/{rsEventId}")
     @Transactional
     public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody VoteDTO voteDTO) throws ParseException {
@@ -57,13 +63,18 @@ public class VoteController {
     @GetMapping("/vote")
     public ResponseEntity<List<VoteDTO>> getVotes(@RequestParam int userId, @RequestParam int rsEventId,
                                                   @RequestParam int pageIndex) {
-        return ResponseEntity.ok(voteService.getVotes(userId, rsEventId, pageIndex).stream().map(
-                vote -> VoteDTO.builder()
-                .userId(vote.getUserId())
-                .voteNum(vote.getVoteNum())
-                .voteTime(dateFormatter.format(vote.getVoteTime()))
-                .build()
-        ).collect(Collectors.toList()));
+        return ResponseEntity.ok(voteService.getVotes(userId, rsEventId, pageIndex).stream()
+                .map(this::transformVoteToVoteDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/vote/between")
+    public ResponseEntity<List<VoteDTO>> getVotesBetween(@RequestBody DateRangeDTO dateRangeDTO) throws ParseException {
+        Date dateStart = dateFormatter.parse(dateRangeDTO.getStartDate());
+        Date dateEnd = dateFormatter.parse(dateRangeDTO.getEndDate());
+        return ResponseEntity.ok(voteService.getVotesBetween(dateStart, dateEnd).stream()
+                .map(this::transformVoteToVoteDTO)
+                .collect(Collectors.toList()));
     }
 
     @ExceptionHandler({VoteNotValidException.class, ParseException.class})

@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.dto.DateRangeDTO;
 import com.thoughtworks.rslist.dto.VoteDTO;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
@@ -123,6 +124,7 @@ public class VoteControllerTest {
                 .param("userId", String.valueOf(userPO.getId()))
                 .param("rsEventId", String.valueOf(rsEventPO.getId()))
                 .param("pageIndex", "1"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(5)))
                 .andExpect(jsonPath("$[0].userId", is(userPO.getId())))
                 .andExpect(jsonPath("$[0].voteNum", is(1)))
@@ -133,5 +135,32 @@ public class VoteControllerTest {
                 .andExpect(jsonPath("$[2].voteNum", is(3)))
                 .andExpect(jsonPath("$[3].voteNum", is(4)))
                 .andExpect(jsonPath("$[4].voteNum", is(5)));
+    }
+
+    @Test
+    public void should_return_vote_record_in_time_range() throws Exception {
+        voteRepository.deleteAll();
+        existVotePOs.clear();
+        UserPO userPO = existUserPOs.get(0);
+        RsEventPO rsEventPO = existRsEventPOs.get(0);
+        for (int i = 0; i < 8; i++) {
+            VotePO votePO = VotePO.builder().userPO(userPO).rsEventPO(rsEventPO).voteNum(i + 1)
+                    .voteTime(formatter.parse(String.format("2020-09-%02d 20:20:20", i + 1))).build();
+            existVotePOs.add(votePO);
+            voteRepository.save(votePO);
+        }
+        DateRangeDTO dateRangeDTO = new DateRangeDTO("2020-09-02 08:00:00", "2020-09-04 23:00:00");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(dateRangeDTO);
+        mockMvc.perform(get("/vote/between").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].userId", is(userPO.getId())))
+                .andExpect(jsonPath("$[0].voteNum", is(2)))
+                .andExpect(jsonPath("$[0].voteTime", is("2020-09-02 20:20:20")))
+                .andExpect(jsonPath("$[1].userId", is(userPO.getId())))
+                .andExpect(jsonPath("$[1].voteNum", is(3)))
+                .andExpect(jsonPath("$[1].voteTime", is("2020-09-03 20:20:20")))
+                .andExpect(jsonPath("$[2].voteNum", is(4)));
     }
 }

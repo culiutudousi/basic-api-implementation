@@ -19,10 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +37,14 @@ public class VoteService {
         this.rsEventRepository = rsEventRepository;
         this.userRepository = userRepository;
         this.voteRepository = voteRepository;
+    }
+
+    private Vote transformVotePOToVote(VotePO votePO) {
+        return Vote.builder()
+                .userId(votePO.getUserPO().getId())
+                .voteNum(votePO.getVoteNum())
+                .voteTime(votePO.getVoteTime())
+                .build();
     }
 
     @Transactional
@@ -72,12 +77,14 @@ public class VoteService {
         Pageable pageable = PageRequest.of(pageIndex - 1, 5);
         UserPO userPO = userService.getUserPO(userId);
         RsEventPO rsEventPO = rsEventService.getRsEventPO(rsEventId);
-        return voteRepository.findAllByUserPOAndRsEventPO(userPO, rsEventPO, pageable).stream().map(
-                votePO -> Vote.builder()
-                .userId(votePO.getUserPO().getId())
-                .voteNum(votePO.getVoteNum())
-                .voteTime(votePO.getVoteTime())
-                .build()
-        ).collect(Collectors.toList());
+        return voteRepository.findAllByUserPOAndRsEventPO(userPO, rsEventPO, pageable).stream()
+                .map(this::transformVotePOToVote)
+                .collect(Collectors.toList());
+    }
+
+    public List<Vote> getVotesBetween(Date dateStart, Date dateEnd) {
+        return voteRepository.findAllByVoteTimeBetween(dateStart, dateEnd).stream()
+                .map(this::transformVotePOToVote)
+                .collect(Collectors.toList());
     }
 }
