@@ -1,4 +1,4 @@
-package com.thoughtworks.rslist;
+package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.dto.RsEventDTO;
@@ -33,23 +33,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 public class RsControllerTest {
-
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     RsEventRepository rsEventRepository;
-
     @Autowired
     UserRepository userRepository;
-
     @Autowired
     VoteRepository voteRepository;
 
     List<UserPO> existUserPOs = new ArrayList<>();
     List<RsEventPO> existRsEventPOs = new ArrayList<>();
     List<VotePO> existVotePOs = new ArrayList<>();
-
     SimpleDateFormat formatter;
 
     @BeforeEach

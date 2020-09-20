@@ -39,14 +39,6 @@ public class RsController {
   @Autowired
   VoteRepository voteRepository;
 
-  SimpleDateFormat dateFormatter = initDateFormatter();
-
-  private SimpleDateFormat initDateFormatter() {
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-    formatter.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
-    return formatter;
-  }
-
   private RsEventWithVoteDTO transformToRsEventWithVoteDTO(RsEventPO rsEventPO) {
     List<VotePO> votePOs = voteRepository.findVotePOByRsEventPO(rsEventPO);
     int totalVoteNumber = votePOs.stream()
@@ -130,31 +122,6 @@ public class RsController {
       return ResponseEntity.badRequest().build();
     }
     rsEventRepository.delete(rsEventPOResult.get());
-    return ResponseEntity.ok(null);
-  }
-
-  @PostMapping("/rs/vote/{rsEventId}")
-  @Transactional
-  public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody VoteDTO voteDTO) throws ParseException {
-    Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
-    Optional<UserPO> userPOResult = userRepository.findById(voteDTO.getUserId());
-    if (!rsEventPOResult.isPresent() || !userPOResult.isPresent() ||
-            voteDTO.getVoteNum() > userPOResult.get().getLeftVoteNumber()) {
-      return ResponseEntity.badRequest().build();
-    }
-    RsEventPO rsEventPO = rsEventPOResult.get();
-    UserPO userPO = userPOResult.get();
-    userPO.setLeftVoteNumber(userPO.getLeftVoteNumber() - voteDTO.getVoteNum());
-    userRepository.save(userPO);
-    Vote vote = Vote.builder()
-            .userId(voteDTO.getUserId())
-            .voteNum(voteDTO.getVoteNum())
-            .voteTime(dateFormatter.parse(voteDTO.getVoteTime())).build();
-    voteRepository.save(VotePO.builder()
-            .userPO(userPO)
-            .rsEventPO(rsEventPO)
-            .voteNum(vote.getVoteNum())
-            .voteTime(vote.getVoteTime()).build());
     return ResponseEntity.ok(null);
   }
 
