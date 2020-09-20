@@ -27,6 +27,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'
     compileOnly 'org.projectlombok:lombok'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.21'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'
     annotationProcessor 'org.projectlombok:lombok'
