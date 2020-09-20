@@ -1,1 +1,8 @@
-
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/rs_application
+    username: root
+    password: qwer123456
+  jpa:
+    hibernate:
+      ddl-auto: create
