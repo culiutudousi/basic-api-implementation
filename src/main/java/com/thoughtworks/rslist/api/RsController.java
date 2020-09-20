@@ -36,14 +36,21 @@ import java.util.stream.Collectors;
 public class RsController {
   Logger logger = RsListApplication.logger;
 
-  @Autowired
+//  @Autowired
   RsEventRepository rsEventRepository;
-  @Autowired
+//  @Autowired
   UserRepository userRepository;
-  @Autowired
+//  @Autowired
   VoteRepository voteRepository;
-  @Autowired
+//  @Autowired
   RsEventService rsEventService;
+
+  public RsController(RsEventRepository rsEventRepository, UserRepository userRepository, VoteRepository voteRepository, RsEventService rsEventService) {
+    this.rsEventRepository = rsEventRepository;
+    this.userRepository = userRepository;
+    this.voteRepository = voteRepository;
+    this.rsEventService = rsEventService;
+  }
 
   private RsEventWithVoteDTO transformToRsEventWithVoteDTO(RsEventWithVote rsEventWithVote) {
     return RsEventWithVoteDTO.builder()

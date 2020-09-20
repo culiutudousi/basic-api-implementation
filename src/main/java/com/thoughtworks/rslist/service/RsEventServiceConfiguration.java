@@ -9,15 +9,15 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RsEventServiceConfiguration {
-    @Autowired
-    RsEventRepository rsEventRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    VoteRepository voteRepository;
-
-    @Bean
-    public RsEventService getRsEventService() {
-        return new RsEventService(rsEventRepository, userRepository, voteRepository);
-    }
+//    @Autowired
+//    RsEventRepository rsEventRepository;
+//    @Autowired
+//    UserRepository userRepository;
+//    @Autowired
+//    VoteRepository voteRepository;
+//
+//    @Bean
+//    public RsEventService getRsEventService() {
+//        return new RsEventService(rsEventRepository, userRepository, voteRepository);
+//    }
 }
