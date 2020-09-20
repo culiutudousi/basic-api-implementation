@@ -4,8 +4,10 @@ import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.dto.UserDTO;
+import com.thoughtworks.rslist.exception.UserNotValidException;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.UserRepository;
+import com.thoughtworks.rslist.service.UserService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,52 +26,61 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    UserService userService;
+
     @PostMapping("/user")
     public ResponseEntity addUser(@RequestBody @Valid UserDTO userDTO) {
-        UserPO userPO = UserPO.builder().name(userDTO.getName()).age(userDTO.getAge()).gender(userDTO.getGender())
-                .email(userDTO.getEmail()).phone(userDTO.getPhone()).leftVoteNumber(10).build();
-        userRepository.save(userPO);
+        int userId = userService.addUser(User.builder()
+                .name(userDTO.getName())
+                .age(userDTO.getAge())
+                .gender(userDTO.getGender())
+                .email(userDTO.getEmail())
+                .phone(userDTO.getPhone())
+                .build());
         return ResponseEntity.created(null)
-                .header("index", Integer.toString(userPO.getId()))
+                .header("index", Integer.toString(userId))
+                .build();
+    }
+
+    private UserDTO transformToUserDTO(User user) {
+        return UserDTO.builder()
+                .name(user.getName())
+                .age(user.getAge())
+                .gender(user.getGender())
+                .email(user.getEmail())
+                .phone(user.getPhone())
                 .build();
     }
 
     @GetMapping("/users")
-    public ResponseEntity getUserList() {
-        List<UserPO> userPOs = (List<UserPO>) userRepository.findAll();
-        List<User> users = userPOs.stream()
-                .map(userPO -> User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
-                        .email(userPO.getEmail()).phone(userPO.getPhone()).leftVoteNumber(userPO.getLeftVoteNumber()).build())
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(users);
+    public ResponseEntity getUsers() {
+        return ResponseEntity.ok(userService.getUsers().stream()
+                .map(this::transformToUserDTO)
+        );
     }
 
     @GetMapping("/user/{id}")
     public ResponseEntity getUser(@PathVariable int id) {
-        Optional<UserPO> userPOResult = userRepository.findById(id);
-        if (!userPOResult.isPresent()) {
-            return ResponseEntity.badRequest().build();
-        }
-        UserPO userPO = userPOResult.get();
-        return ResponseEntity.ok(User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
-                .email(userPO.getEmail()).phone(userPO.getPhone()).leftVoteNumber(userPO.getLeftVoteNumber()).build());
+        User user = userService.getUser(id);
+        return ResponseEntity.ok(transformToUserDTO(user));
     }
 
     @DeleteMapping("/user/{id}")
     public ResponseEntity deleteUser(@PathVariable int id) {
-        Optional<UserPO> userPOResult = userRepository.findById(id);
-        if (!userPOResult.isPresent()) {
-            return ResponseEntity.badRequest().build();
-        }
-        userRepository.delete(userPOResult.get());
+        userService.deleteUser(id);
         return ResponseEntity.ok(null);
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class})
+    @ExceptionHandler({UserNotValidException.class, MethodArgumentNotValidException.class})
     public ResponseEntity rsExceptionHandler(Exception exception) {
-        Error error = new Error();
-        error.setError("invalid user");
-        logger.error("invalid user");
-        return ResponseEntity.badRequest().body(error);
+        String errorMessage;
+        if (exception instanceof MethodArgumentNotValidException) {
+            errorMessage = "invalid user";
+        } else {
+            errorMessage = exception.getMessage();
+        }
+        logger.error("Exception in UserController: " + errorMessage);
+        return ResponseEntity.badRequest().body(new Error(errorMessage));
     }
 }
