@@ -60,7 +60,7 @@ public class RsController {
   }
 
   @GetMapping("/rs/list")
-  public ResponseEntity getRsListBetween() {
+  public ResponseEntity<List<RsEventWithVoteDTO>> getRsListBetween() {
     return ResponseEntity.ok(rsEventService.getRsEvents().stream()
             .map(this::transformToRsEventWithVoteDTO)
             .collect(Collectors.toList()));

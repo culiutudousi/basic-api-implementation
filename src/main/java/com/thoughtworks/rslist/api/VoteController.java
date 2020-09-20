@@ -14,6 +14,8 @@ import com.thoughtworks.rslist.repository.VoteRepository;
 import com.thoughtworks.rslist.service.VoteService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,9 +23,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 @RestController
 public class VoteController {
@@ -40,7 +44,7 @@ public class VoteController {
         return formatter;
     }
 
-    @PostMapping("/rs/vote/{rsEventId}")
+    @PostMapping("/vote/{rsEventId}")
     @Transactional
     public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody VoteDTO voteDTO) throws ParseException {
         voteService.vote(rsEventId, Vote.builder()
@@ -48,6 +52,18 @@ public class VoteController {
                 .voteNum(voteDTO.getVoteNum())
                 .voteTime(dateFormatter.parse(voteDTO.getVoteTime())).build());
         return ResponseEntity.ok(null);
+    }
+
+    @GetMapping("/vote")
+    public ResponseEntity<List<VoteDTO>> getVotes(@RequestParam int userId, @RequestParam int rsEventId,
+                                                  @RequestParam int pageIndex) {
+        return ResponseEntity.ok(voteService.getVotes(userId, rsEventId, pageIndex).stream().map(
+                vote -> VoteDTO.builder()
+                .userId(vote.getUserId())
+                .voteNum(vote.getVoteNum())
+                .voteTime(dateFormatter.format(vote.getVoteTime()))
+                .build()
+        ).collect(Collectors.toList()));
     }
 
     @ExceptionHandler({VoteNotValidException.class, ParseException.class})

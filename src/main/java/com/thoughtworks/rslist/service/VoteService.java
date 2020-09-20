@@ -10,21 +10,31 @@ import com.thoughtworks.rslist.po.VotePO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 @Service
 public class VoteService {
     final RsEventRepository rsEventRepository;
     final UserRepository userRepository;
     final VoteRepository voteRepository;
+
+    @Autowired
+    RsEventService rsEventService;
+    @Autowired
+    UserService userService;
 
     public VoteService(RsEventRepository rsEventRepository, UserRepository userRepository, VoteRepository voteRepository) {
         this.rsEventRepository = rsEventRepository;
@@ -51,10 +61,23 @@ public class VoteService {
                 .voteTime(vote.getVoteTime()).build());
     }
 
-    public int getVoteNumberOf(RsEventPO rsEventPO) {
+    protected int getVoteNumberOf(RsEventPO rsEventPO) {
         List<VotePO> votePOs = voteRepository.findVotePOByRsEventPO(rsEventPO);
         return votePOs.stream()
                 .map(VotePO::getVoteNum)
                 .reduce(0, Integer::sum);
+    }
+
+    public List<Vote> getVotes(int userId, int rsEventId, int pageIndex) {
+        Pageable pageable = PageRequest.of(pageIndex - 1, 5);
+        UserPO userPO = userService.getUserPO(userId);
+        RsEventPO rsEventPO = rsEventService.getRsEventPO(rsEventId);
+        return voteRepository.findAllByUserPOAndRsEventPO(userPO, rsEventPO, pageable).stream().map(
+                votePO -> Vote.builder()
+                .userId(votePO.getUserPO().getId())
+                .voteNum(votePO.getVoteNum())
+                .voteTime(votePO.getVoteTime())
+                .build()
+        ).collect(Collectors.toList());
     }
 }

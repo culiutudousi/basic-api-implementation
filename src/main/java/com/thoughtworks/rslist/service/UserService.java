@@ -49,6 +49,14 @@ public class UserService {
         return userPO.getId();
     }
 
+    protected UserPO getUserPO(int userId) {
+        Optional<UserPO> userPOResult = userRepository.findById(userId);
+        if (!userPOResult.isPresent()) {
+            throw new UserNotValidException("User id not exist");
+        }
+        return userPOResult.get();
+    }
+
     public User getUser(int id) {
         Optional<UserPO> userPOResult = userRepository.findById(id);
         if (!userPOResult.isPresent()) {
