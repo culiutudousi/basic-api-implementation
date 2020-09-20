@@ -1,6 +1,5 @@
 package com.thoughtworks.rslist.po;
 
-import com.thoughtworks.rslist.domain.RsEvent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.Date;
 
 @Entity

@@ -1,16 +1,15 @@
-package com.thoughtworks.rslist.domain;
+package com.thoughtworks.rslist.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RsEvent {
+public class RsEventDTO {
     private String eventName;
     private String keyWord;
-    private int userId;
 }

@@ -3,9 +3,9 @@ package com.thoughtworks.rslist.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
-import com.thoughtworks.rslist.domain.RsEvent;
-import com.thoughtworks.rslist.dto.RsEventDto;
-import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.dto.RsEventDTO;
+import com.thoughtworks.rslist.dto.RsEventWithUserIdDTO;
+import com.thoughtworks.rslist.dto.RsEventWithVoteDTO;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.dto.VoteDTO;
 import com.thoughtworks.rslist.exception.RsEventNotValidException;
@@ -47,16 +47,15 @@ public class RsController {
     return formatter;
   }
 
-  private RsEventDto getRsEventDTO(RsEventPO rsEventPO) {
+  private RsEventWithVoteDTO transformToRsEventWithVoteDTO(RsEventPO rsEventPO) {
     List<VotePO> votePOs = voteRepository.findVotePOByRsEventPO(rsEventPO);
     int totalVoteNumber = votePOs.stream()
             .map(VotePO::getVoteNum)
             .reduce(0, Integer::sum);
-    return new RsEventDto(rsEventPO.getEventName(), rsEventPO.getKeyWord(), rsEventPO.getUserPO().getId(), totalVoteNumber);
+    return new RsEventWithVoteDTO(rsEventPO.getEventName(), rsEventPO.getKeyWord(), totalVoteNumber);
   }
 
   @GetMapping("/rs/{index}")
-  @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListAtIndex(@PathVariable int index) {
     if (index <= 0) {
       throw new RsEventNotValidException("invalid index");
@@ -66,37 +65,36 @@ public class RsController {
       throw new RsEventNotValidException("invalid index");
     }
     RsEventPO rsEventPO = rsEventPOResult.get();
-    return ResponseEntity.ok(getRsEventDTO(rsEventPO));
+    return ResponseEntity.ok(transformToRsEventWithVoteDTO(rsEventPO));
   }
 
   @GetMapping("/rs/list")
-  @JsonView(PropertyFilter.ReEventShowFilter.class)
   public ResponseEntity getRsListBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
     List<RsEventPO> rsEventPOs = (List<RsEventPO>) rsEventRepository.findAll();
-    List<RsEventDto> rsEvents = rsEventPOs.stream()
-            .map(this::getRsEventDTO)
-            .collect(Collectors.toList());
     if (start == null || end == null) {
-      return ResponseEntity.ok(rsEvents);
+      return ResponseEntity.ok(rsEventPOs.stream()
+              .map(this::transformToRsEventWithVoteDTO)
+              .collect(Collectors.toList()));
     }
     if (start <= 0 || start > end) {
       throw new RsEventNotValidException("invalid request param");
     }
-    return ResponseEntity.ok(rsEvents.stream()
-            .filter(rsEvent -> rsEvent.getUserId() >= start && rsEvent.getUserId() <= end)
+    return ResponseEntity.ok(rsEventPOs.stream()
+            .filter(rsEventPO -> rsEventPO.getUserPO().getId() >= start && rsEventPO.getUserPO().getId() <= end)
+            .map(this::transformToRsEventWithVoteDTO)
             .collect(Collectors.toList()));
   }
 
   @PostMapping("/rs/event")
-  public ResponseEntity addRsEvent(@RequestBody @Valid RsEvent rsEvent) {
-    Optional<UserPO> userPOResult = userRepository.findById(rsEvent.getUserId());
+  public ResponseEntity addRsEvent(@RequestBody @Valid RsEventWithUserIdDTO rsEventWithUserIdDTO) {
+    Optional<UserPO> userPOResult = userRepository.findById(rsEventWithUserIdDTO.getUserId());
     if (!userPOResult.isPresent()) {
       return ResponseEntity.badRequest().build();
     }
 
     RsEventPO rsEventPO = RsEventPO.builder()
-            .eventName(rsEvent.getEventName())
-            .keyWord(rsEvent.getKeyWord())
+            .eventName(rsEventWithUserIdDTO.getEventName())
+            .keyWord(rsEventWithUserIdDTO.getKeyWord())
             .userPO(userPOResult.get())
             .build();
     rsEventRepository.save(rsEventPO);
@@ -106,20 +104,20 @@ public class RsController {
   }
 
   @PatchMapping("/rs/event/{rsEventId}")
-  public ResponseEntity updateRsEvent(@PathVariable int rsEventId, @RequestBody RsEvent rsEvent) {
+  public ResponseEntity updateRsEvent(@PathVariable int rsEventId, @RequestBody RsEventWithUserIdDTO rsEventWithUserIdDTO) {
     Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
     if (!rsEventPOResult.isPresent()) {
       return ResponseEntity.badRequest().build();
     }
     RsEventPO rsEventPO = rsEventPOResult.get();
-    if (rsEvent.getUserId() != rsEventPO.getUserPO().getId()) {
+    if (rsEventWithUserIdDTO.getUserId() != rsEventPO.getUserPO().getId()) {
       return ResponseEntity.badRequest().build();
     }
-    if (rsEvent.getEventName() != null) {
-      rsEventPO.setEventName(rsEvent.getEventName());
+    if (rsEventWithUserIdDTO.getEventName() != null) {
+      rsEventPO.setEventName(rsEventWithUserIdDTO.getEventName());
     }
-    if (rsEvent.getKeyWord() != null) {
-      rsEventPO.setKeyWord(rsEvent.getKeyWord());
+    if (rsEventWithUserIdDTO.getKeyWord() != null) {
+      rsEventPO.setKeyWord(rsEventWithUserIdDTO.getKeyWord());
     }
     rsEventRepository.save(rsEventPO);
     return ResponseEntity.ok(null);
