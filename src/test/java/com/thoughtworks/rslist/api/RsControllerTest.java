@@ -184,38 +184,6 @@ public class RsControllerTest {
     }
 
     @Test
-    public void should_vote_given_vote_number_less_than_user_has() throws Exception {
-        RsEventPO rsEventPO = existRsEventPOs.get(1);
-        int rsEventId = rsEventPO.getId();
-        int userId = rsEventPO.getUserPO().getId();
-        VoteDTO voteDTO = new VoteDTO(2, userId, "2020-09-18 00:18:27");
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(voteDTO);
-        mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
-        assertEquals(4, votesResult.size());
-        assertEquals(2, votesResult.get(3).getVoteNum());
-        assertEquals("2020-09-18 00:18:27", formatter.format(votesResult.get(3).getVoteTime()));
-        assertEquals(userId, votesResult.get(3).getUserPO().getId());
-        assertEquals(rsEventId, votesResult.get(3).getRsEventPO().getId());
-        assertEquals(2, userRepository.findById(userId).get().getLeftVoteNumber());
-    }
-
-    @Test
-    public void should_return_bad_request_when_vote_given_vote_number_larger_than_user_has() throws Exception {
-        int rsEventId = existRsEventPOs.get(1).getId();
-        int userId = existRsEventPOs.get(1).getUserPO().getId();
-        VoteDTO voteDTO = new VoteDTO(12, userId, "2020-09-18 00:18:27");
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(voteDTO);
-        mockMvc.perform(post("/rs/vote/" + rsEventId).content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-        List<VotePO> votesResult = (List<VotePO>) voteRepository.findAll();
-        assertEquals(3, votesResult.size());
-    }
-
-    @Test
     public void should_delete_rs_event() throws Exception {
         int rsEventId = existRsEventPOs.get(1).getId();
         mockMvc.perform(delete("/rs/event/" + rsEventId))
