@@ -3,10 +3,10 @@ package com.thoughtworks.rslist.api;
 import com.thoughtworks.rslist.RsListApplication;
 import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.dto.UserDTO;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.UserRepository;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,9 +25,9 @@ public class UserController {
     private UserRepository userRepository;
 
     @PostMapping("/user")
-    public ResponseEntity addUser(@RequestBody @Valid User user) {
-        UserPO userPO = UserPO.builder().name(user.getName()).age(user.getAge()).gender(user.getGender())
-                .email(user.getEmail()).phone(user.getPhone()).leftVoteNumber(10).build();
+    public ResponseEntity addUser(@RequestBody @Valid UserDTO userDTO) {
+        UserPO userPO = UserPO.builder().name(userDTO.getName()).age(userDTO.getAge()).gender(userDTO.getGender())
+                .email(userDTO.getEmail()).phone(userDTO.getPhone()).leftVoteNumber(10).build();
         userRepository.save(userPO);
         return ResponseEntity.created(null)
                 .header("index", Integer.toString(userPO.getId()))
@@ -39,7 +39,7 @@ public class UserController {
         List<UserPO> userPOs = (List<UserPO>) userRepository.findAll();
         List<User> users = userPOs.stream()
                 .map(userPO -> User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
-                        .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getLeftVoteNumber()).build())
+                        .email(userPO.getEmail()).phone(userPO.getPhone()).leftVoteNumber(userPO.getLeftVoteNumber()).build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
@@ -52,7 +52,7 @@ public class UserController {
         }
         UserPO userPO = userPOResult.get();
         return ResponseEntity.ok(User.builder().name(userPO.getName()).age(userPO.getAge()).gender(userPO.getGender())
-                .email(userPO.getEmail()).phone(userPO.getPhone()).votes(userPO.getLeftVoteNumber()).build());
+                .email(userPO.getEmail()).phone(userPO.getPhone()).leftVoteNumber(userPO.getLeftVoteNumber()).build());
     }
 
     @DeleteMapping("/user/{id}")

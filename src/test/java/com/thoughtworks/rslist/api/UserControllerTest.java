@@ -2,6 +2,7 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.dto.UserDTO;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
@@ -67,9 +68,9 @@ public class UserControllerTest {
 
     @Test
     public void should_register_user() throws Exception {
-        User user = new User("Alice", "female", 24, "Alice@xxx.com", "12222222222");
+        UserDTO userDTO = new UserDTO("Alice", "female", 24, "Alice@xxx.com", "12222222222");
         ObjectMapper objectMapper = new ObjectMapper();
-        String userString = objectMapper.writeValueAsString(user);
+        String userString = objectMapper.writeValueAsString(userDTO);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
         List<UserPO> userPOs = (List<UserPO>) userRepository.findAll();
@@ -80,9 +81,9 @@ public class UserControllerTest {
 
     @Test
     public void should_validate_user_name_format() throws Exception {
-        User user = new User("czc123456789", "male", 24, "czc@xxx.com", "12345678901");
+        UserDTO userDTO = new UserDTO("czc123456789", "male", 24, "czc@xxx.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
-        String userString = objectMapper.writeValueAsString(user);
+        String userString = objectMapper.writeValueAsString(userDTO);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid user")));
@@ -90,9 +91,9 @@ public class UserControllerTest {
 
     @Test
     public void should_validate_user_age_format() throws Exception {
-        User user = new User("czc", "male", 3, "czc@xxx.com", "12345678901");
+        UserDTO userDTO = new UserDTO("czc", "male", 3, "czc@xxx.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
-        String userString = objectMapper.writeValueAsString(user);
+        String userString = objectMapper.writeValueAsString(userDTO);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid user")));
@@ -100,9 +101,9 @@ public class UserControllerTest {
 
     @Test
     public void should_validate_user_email_format() throws Exception {
-        User user = new User("czc", "male", 24, "czc.com", "12345678901");
+        UserDTO userDTO = new UserDTO("czc", "male", 24, "czc.com", "12345678901");
         ObjectMapper objectMapper = new ObjectMapper();
-        String userString = objectMapper.writeValueAsString(user);
+        String userString = objectMapper.writeValueAsString(userDTO);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid user")));
@@ -110,9 +111,9 @@ public class UserControllerTest {
 
     @Test
     public void should_validate_user_phone_format() throws Exception {
-        User user = new User("czc", "male", 24, "czc@xxx.com", "123456789012222222");
+        UserDTO userDTO = new UserDTO("czc", "male", 24, "czc@xxx.com", "123456789012222222");
         ObjectMapper objectMapper = new ObjectMapper();
-        String userString = objectMapper.writeValueAsString(user);
+        String userString = objectMapper.writeValueAsString(userDTO);
         mockMvc.perform(post("/user").content(userString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("invalid user")));
@@ -124,14 +125,12 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.name", is("czc")))
                 .andExpect(jsonPath("$.age", is(24)))
                 .andExpect(status().isOk());
-
     }
 
     @Test
     public void should_return_bad_request_when_get_user_information_given_not_exist_user_id() throws Exception {
         mockMvc.perform(get("/user/99999"))
                 .andExpect(status().isBadRequest());
-
     }
 
     @Test
@@ -147,6 +146,5 @@ public class UserControllerTest {
     public void should_return_bad_request_when_delete_user_given_not_exist_user_id() throws Exception {
         mockMvc.perform(delete("/user/99999"))
                 .andExpect(status().isBadRequest());
-
     }
 }
