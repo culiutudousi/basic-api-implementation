@@ -1,9 +1,9 @@
 package com.thoughtworks.rslist.exception;
 
-public class RsEventNotValidException extends RuntimeException {
+public class VoteNotValidException extends RuntimeException {
     private final String errorMessage;
 
-    public RsEventNotValidException(String errorMessage) {
+    public VoteNotValidException(String errorMessage) {
         this.errorMessage = errorMessage;
     }
 

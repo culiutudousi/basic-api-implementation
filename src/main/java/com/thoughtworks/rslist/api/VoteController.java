@@ -1,22 +1,23 @@
 package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.RsListApplication;
+import com.thoughtworks.rslist.component.Error;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.dto.VoteDTO;
+import com.thoughtworks.rslist.exception.VoteNotValidException;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.po.VotePO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
+import com.thoughtworks.rslist.service.VoteService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,11 +30,7 @@ public class VoteController {
     Logger logger = RsListApplication.logger;
 
     @Autowired
-    RsEventRepository rsEventRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    VoteRepository voteRepository;
+    VoteService voteService;
 
     SimpleDateFormat dateFormatter = initDateFormatter();
 
@@ -46,25 +43,17 @@ public class VoteController {
     @PostMapping("/rs/vote/{rsEventId}")
     @Transactional
     public ResponseEntity addVote(@PathVariable int rsEventId, @RequestBody VoteDTO voteDTO) throws ParseException {
-        Optional<RsEventPO> rsEventPOResult = rsEventRepository.findById(rsEventId);
-        Optional<UserPO> userPOResult = userRepository.findById(voteDTO.getUserId());
-        if (!rsEventPOResult.isPresent() || !userPOResult.isPresent() ||
-                voteDTO.getVoteNum() > userPOResult.get().getLeftVoteNumber()) {
-            return ResponseEntity.badRequest().build();
-        }
-        RsEventPO rsEventPO = rsEventPOResult.get();
-        UserPO userPO = userPOResult.get();
-        userPO.setLeftVoteNumber(userPO.getLeftVoteNumber() - voteDTO.getVoteNum());
-        userRepository.save(userPO);
-        Vote vote = Vote.builder()
+        voteService.vote(rsEventId, Vote.builder()
                 .userId(voteDTO.getUserId())
                 .voteNum(voteDTO.getVoteNum())
-                .voteTime(dateFormatter.parse(voteDTO.getVoteTime())).build();
-        voteRepository.save(VotePO.builder()
-                .userPO(userPO)
-                .rsEventPO(rsEventPO)
-                .voteNum(vote.getVoteNum())
-                .voteTime(vote.getVoteTime()).build());
+                .voteTime(dateFormatter.parse(voteDTO.getVoteTime())).build());
         return ResponseEntity.ok(null);
+    }
+
+    @ExceptionHandler({VoteNotValidException.class, ParseException.class})
+    public ResponseEntity voteExceptionHandler(Exception exception) {
+        String errorMessage = exception.getMessage();
+        logger.error(errorMessage);
+        return ResponseEntity.badRequest().body(new Error(errorMessage));
     }
 }
