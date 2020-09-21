@@ -22,6 +22,7 @@ import java.time.LocalTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -92,10 +93,11 @@ public class RsTradeControllerTest {
     }
 
     @Test
-    public void should_trade_given_larger_amount() throws Exception {
+    public void should_delete_old_event_when_trade_given_larger_amount() throws Exception {
+        int oldRsEventId = existRsEventPOs.get(0).getId();
         mockMvc.perform(post("/rs/trade")
                 .param("userId", String.valueOf(existUserPOs.get(0).getId()))
-                .param("rsEventId", String.valueOf(existRsEventPOs.get(0).getId()))
+                .param("rsEventId", String.valueOf(oldRsEventId))
                 .param("amount", String.valueOf(2))
                 .param("rank", String.valueOf(1)))
                 .andExpect(status().isOk());
@@ -111,10 +113,11 @@ public class RsTradeControllerTest {
                 .param("rank", String.valueOf(1)))
                 .andExpect(status().isOk());
         rsTradeResult = (List<RsTradePO>) rsTradeRepository.findAll();
-        assertEquals(2, rsTradeResult.size());
-        assertEquals(existRsEventPOs.get(1).getId(), rsTradeResult.get(1).getRsEventPO().getId());
-        assertEquals(3, rsTradeResult.get(1).getAmount());
-        assertEquals(1, rsTradeResult.get(1).getRank());
+        assertEquals(1, rsTradeResult.size());
+        assertEquals(existRsEventPOs.get(1).getId(), rsTradeResult.get(0).getRsEventPO().getId());
+        assertEquals(3, rsTradeResult.get(0).getAmount());
+        assertEquals(1, rsTradeResult.get(0).getRank());
+        assertFalse(rsEventRepository.findById(oldRsEventId).isPresent());
     }
 
     @Test

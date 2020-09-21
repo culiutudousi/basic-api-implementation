@@ -11,6 +11,5 @@ import java.util.List;
 
 public interface RsTradeRepository extends CrudRepository<RsTradePO, Integer> {
     List<RsTradePO> findAllByRsEventPO(RsEventPO rsEventPO);
-    @Query(value = "select coalesce(max(amount),0) from rs_trade where list_rank = :rankNum", nativeQuery = true)
-    int findMaxAmountOrZeroByRank(@Param("rankNum") int rank);
+    RsTradePO findByRank(int rank);
 }

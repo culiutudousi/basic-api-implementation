@@ -1,6 +1,5 @@
 package com.thoughtworks.rslist.service;
 
-import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.RsTrade;
 import com.thoughtworks.rslist.domain.RsTradeRecord;
 import com.thoughtworks.rslist.exception.RsTradeNotValidException;
@@ -12,6 +11,7 @@ import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,9 +31,14 @@ public class RsTradeService {
         this.rsTradeRepository = rsTradeRepository;
     }
 
+    @Transactional
     public void addTrade(RsTrade rsTrade) {
-        if (rsTrade.getAmount() <= rsTradeRepository.findMaxAmountOrZeroByRank(rsTrade.getRank())) {
+        RsTradePO oldTradePO = rsTradeRepository.findByRank(rsTrade.getRank());
+        if (oldTradePO != null && oldTradePO.getAmount() >= rsTrade.getAmount()) {
             throw new RsTradeNotValidException("Trade amount is not enough");
+        }
+        if (oldTradePO != null) {
+            rsEventService.deleteRsEvent(oldTradePO.getRsEventPO().getId());
         }
         rsTradeRepository.save(RsTradePO.builder()
                 .amount(rsTrade.getAmount())
