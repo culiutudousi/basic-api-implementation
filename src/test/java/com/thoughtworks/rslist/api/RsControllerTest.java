@@ -52,6 +52,9 @@ public class RsControllerTest {
         rsEventRepository.deleteAll();
         userRepository.deleteAll();
         voteRepository.deleteAll();
+        existRsEventPOs.clear();
+        existUserPOs.clear();
+        existVotePOs.clear();
 
         UserPO firstUserPO = UserPO.builder().name("czc").age(24).gender("male").email("czc@xxx.com").phone("12345678901").leftVoteNumber(10).build();
         existUserPOs.add(firstUserPO);
@@ -192,5 +195,25 @@ public class RsControllerTest {
         assertEquals(2, rsEventPOResults.size());
         assertEquals("1st event", rsEventPOResults.get(0).getEventName());
         assertEquals("3rd event", rsEventPOResults.get(1).getEventName());
+    }
+
+    @Test
+    public void should_rank_by_votes_without_trade() throws Exception {
+
+    }
+
+    @Test
+    public void should_rank_by_votes_with_trade() throws Exception {
+
+    }
+
+    @Test
+    public void should_buy_rank() throws Exception {
+
+    }
+
+    @Test
+    public void should_return_bad_request_when_buy_rank_given_amount_not_enough() throws Exception {
+
     }
 }

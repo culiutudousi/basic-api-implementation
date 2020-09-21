@@ -24,9 +24,6 @@ public class UserController {
     Logger logger = RsListApplication.logger;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     UserService userService;
 
     @PostMapping("/user")

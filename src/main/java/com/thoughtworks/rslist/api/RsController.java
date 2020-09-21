@@ -37,12 +37,6 @@ public class RsController {
   Logger logger = RsListApplication.logger;
 
   @Autowired
-  RsEventRepository rsEventRepository;
-  @Autowired
-  UserRepository userRepository;
-  @Autowired
-  VoteRepository voteRepository;
-  @Autowired
   RsEventService rsEventService;
 
   private RsEventWithVoteDTO transformToRsEventWithVoteDTO(RsEventWithVote rsEventWithVote) {
