@@ -10,6 +10,7 @@ import com.thoughtworks.rslist.po.VotePO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,124 @@ public class RsControllerTest {
                 .andExpect(jsonPath("$[1].voteNumber", is(2)))
                 .andExpect(jsonPath("$[2].eventName", is("3rd event")))
                 .andExpect(jsonPath("$[2].voteNumber", is(3)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_get_ranked_rs_event_list() throws Exception {
+        mockMvc.perform(get("/rs/rankedList"))
+                .andExpect(jsonPath("$", not(hasKey("0"))))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("eventName", "3rd event")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("voteNumber", 3)))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("eventName", "2ed event")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("voteNumber", 2)))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("eventName", "1st event")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("voteNumber", 1)))
+                .andExpect(jsonPath("$", not(hasKey("4"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_update_ranked_list_when_get_ranked_rs_event_list_given_votes() throws Exception {
+        VoteDTO voteDTO = new VoteDTO(4, existUserPOs.get(0).getId(), "2020-09-18 00:18:27");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(voteDTO);
+        mockMvc.perform(post("/vote/" + existRsEventPOs.get(0).getId())
+                .content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/rs/rankedList"))
+                .andExpect(jsonPath("$", not(hasKey("0"))))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("eventName", "1st event")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("voteNumber", 5)))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("eventName", "3rd event")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("voteNumber", 3)))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("eventName", "2ed event")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("voteNumber", 2)))
+                .andExpect(jsonPath("$", not(hasKey("4"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_put_trade_event_at_the_position_when_get_ranked_rs_event_list_given_trade_at_empty_position() throws Exception {
+        mockMvc.perform(post("/rs/trade")
+                .param("userId", String.valueOf(existUserPOs.get(0).getId()))
+                .param("rsEventId", String.valueOf(existRsEventPOs.get(0).getId()))
+                .param("amount", String.valueOf(2))
+                .param("rank", String.valueOf(1)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/rs/rankedList"))
+                .andExpect(jsonPath("$", not(hasKey("0"))))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("eventName", "1st event")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("voteNumber", 1)))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("eventName", "3rd event")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("voteNumber", 3)))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("eventName", "2ed event")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("voteNumber", 2)))
+                .andExpect(jsonPath("$", not(hasKey("4"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_delete_the_old_trade_event_when_get_ranked_rs_event_list_given_trade_at_position_with_old_trade() throws Exception {
+        mockMvc.perform(post("/rs/trade")
+                .param("userId", String.valueOf(existUserPOs.get(0).getId()))
+                .param("rsEventId", String.valueOf(existRsEventPOs.get(0).getId()))
+                .param("amount", String.valueOf(2))
+                .param("rank", String.valueOf(1)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/rs/trade")
+                .param("userId", String.valueOf(existUserPOs.get(0).getId()))
+                .param("rsEventId", String.valueOf(existRsEventPOs.get(1).getId()))
+                .param("amount", String.valueOf(4))
+                .param("rank", String.valueOf(1)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/rs/rankedList"))
+                .andExpect(jsonPath("$", not(hasKey("0"))))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("eventName", "2ed event")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("voteNumber", 2)))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("eventName", "3rd event")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("voteNumber", 3)))
+                .andExpect(jsonPath("$", not(hasKey("3"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_return_bad_request_when_get_ranked_rs_event_list_given_trade_amount_not_enough() throws Exception {
+        mockMvc.perform(post("/rs/trade")
+                .param("userId", String.valueOf(existUserPOs.get(0).getId()))
+                .param("rsEventId", String.valueOf(existRsEventPOs.get(0).getId()))
+                .param("amount", String.valueOf(2))
+                .param("rank", String.valueOf(1)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/rs/trade")
+                .param("userId", String.valueOf(existUserPOs.get(0).getId()))
+                .param("rsEventId", String.valueOf(existRsEventPOs.get(1).getId()))
+                .param("amount", String.valueOf(1))
+                .param("rank", String.valueOf(1)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/rs/rankedList"))
+                .andExpect(jsonPath("$", not(hasKey("0"))))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("eventName", "1st event")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.1", Matchers.hasEntry("voteNumber", 1)))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("eventName", "3rd event")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.2", Matchers.hasEntry("voteNumber", 3)))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("eventName", "2ed event")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("keyWord", "no tag")))
+                .andExpect(jsonPath("$.3", Matchers.hasEntry("voteNumber", 2)))
+                .andExpect(jsonPath("$", not(hasKey("4"))))
                 .andExpect(status().isOk());
     }
 

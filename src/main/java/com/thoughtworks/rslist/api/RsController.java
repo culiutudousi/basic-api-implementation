@@ -19,6 +19,7 @@ import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
 import com.thoughtworks.rslist.service.RsEventService;
 import com.thoughtworks.rslist.service.VoteService;
+import jdk.nashorn.internal.objects.LinkedMap;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -54,10 +55,19 @@ public class RsController {
   }
 
   @GetMapping("/rs/list")
-  public ResponseEntity<List<RsEventWithVoteDTO>> getRsListBetween() {
+  public ResponseEntity<List<RsEventWithVoteDTO>> getRsList() {
     return ResponseEntity.ok(rsEventService.getRsEvents().stream()
             .map(this::transformToRsEventWithVoteDTO)
             .collect(Collectors.toList()));
+  }
+
+  @GetMapping("/rs/rankedList")
+  public ResponseEntity<Map<Integer, RsEventWithVoteDTO>> getRankedRsList() {
+    LinkedHashMap<Integer, RsEventWithVoteDTO> orderedRsList = new LinkedHashMap<>();
+    rsEventService.getRankedEvents().entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .forEachOrdered(e -> orderedRsList.put(e.getKey(), transformToRsEventWithVoteDTO(e.getValue())));
+    return ResponseEntity.ok(orderedRsList);
   }
 
   @PostMapping("/rs/event")

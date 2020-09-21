@@ -1,5 +1,6 @@
 package com.thoughtworks.rslist.service;
 
+import com.thoughtworks.rslist.domain.RsEventWithVote;
 import com.thoughtworks.rslist.domain.RsTrade;
 import com.thoughtworks.rslist.domain.RsTradeRecord;
 import com.thoughtworks.rslist.exception.RsTradeNotValidException;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class RsTradeService {
@@ -47,17 +50,14 @@ public class RsTradeService {
                 .build());
     }
 
-    public RsTradeRecord getLatestRecord(int rsEventId) {
-        RsEventPO rsEventPO = rsEventService.getRsEventPO(rsEventId);
-        List<RsTradePO> rsTradePOs = rsTradeRepository.findAllByRsEventPO(rsEventPO);
-        if (rsTradePOs.size() == 0) {
-            return RsTradeRecord.builder().isBought(false).build();
-        }
-        RsTradePO lastRsTradePO = rsTradePOs.get(rsTradePOs.size() - 1);
-        return RsTradeRecord.builder()
-                .isBought(true)
-                .amount(lastRsTradePO.getAmount())
-                .rank(lastRsTradePO.getRank())
-                .build();
+    public List<RsTrade> getTrades() {
+        List<RsTradePO> rsTradePOs = (List<RsTradePO>) rsTradeRepository.findAll();
+        return rsTradePOs.stream()
+                .map(rsTradePO -> RsTrade.builder()
+                        .amount(rsTradePO.getAmount())
+                        .rank(rsTradePO.getRank())
+                        .rsEventId(rsTradePO.getRsEventPO().getId())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
